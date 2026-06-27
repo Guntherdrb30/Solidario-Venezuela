@@ -4,13 +4,18 @@ import { SearchBar } from '@/components/SearchBar';
 import { PersonaCard } from '@/components/PersonaCard';
 import { CentroCard } from '@/components/CentroCard';
 import { DenunciaCard } from '@/components/DenunciaCard';
+import { VoluntarioCard } from '@/components/VoluntarioCard';
+import { StatsBar } from '@/components/StatsBar';
+import { AvisoBanner } from '@/components/AvisoBanner';
 import { AgregarPersonaModal } from '@/components/AgregarPersonaModal';
 import { AgregarCentroModal } from '@/components/AgregarCentroModal';
 import { AgregarDenunciaModal } from '@/components/AgregarDenunciaModal';
+import { AgregarVoluntarioModal } from '@/components/AgregarVoluntarioModal';
+import { ESTADOS_VENEZUELA } from '@/lib/venezuela-data';
 
 async function shareApp() {
   const url = window.location.origin;
-  const text = 'Solidario Venezuela — Encuentra personas desplazadas y centros de ayuda en Venezuela.';
+  const text = 'Solidario Venezuela — Encuentra personas desaparecidas y centros de ayuda tras el terremoto en Venezuela.';
   if (navigator.share) {
     await navigator.share({ title: 'Solidario Venezuela', text, url });
   } else {
@@ -19,39 +24,47 @@ async function shareApp() {
   }
 }
 
-type Tab = 'personas' | 'centros' | 'denuncias';
+type Tab = 'personas' | 'centros' | 'denuncias' | 'voluntarios';
 
 const TABS: { value: Tab; label: string; icon: string }[] = [
-  { value: 'personas',   label: 'Personas',        icon: '👤' },
-  { value: 'centros',    label: 'Centros de Ayuda', icon: '🏠' },
-  { value: 'denuncias',  label: 'Denuncias',        icon: '🚨' },
+  { value: 'personas',    label: 'Personas',         icon: '👤' },
+  { value: 'centros',     label: 'Centros de Ayuda', icon: '🏠' },
+  { value: 'voluntarios', label: 'Voluntarios',      icon: '🙋' },
+  { value: 'denuncias',   label: 'Denuncias',        icon: '🚨' },
 ];
 
 const ENDPOINTS: Record<Tab, string> = {
-  personas:  '/api/personas',
-  centros:   '/api/centros',
-  denuncias: '/api/denuncias',
+  personas:    '/api/personas',
+  centros:     '/api/centros',
+  denuncias:   '/api/denuncias',
+  voluntarios: '/api/voluntarios',
 };
 
 const EMPTY_LABELS: Record<Tab, string> = {
-  personas:  'No hay personas registradas aún',
-  centros:   'No hay centros de ayuda registrados aún',
-  denuncias: 'No hay denuncias registradas aún',
+  personas:    'No hay personas registradas aún',
+  centros:     'No hay centros de ayuda registrados aún',
+  denuncias:   'No hay denuncias registradas aún',
+  voluntarios: 'No hay voluntarios registrados aún',
 };
 
 export default function Home() {
   const [tab, setTab] = useState<Tab>('personas');
   const [query, setQuery] = useState('');
+  const [estado, setEstado] = useState('');
   const [results, setResults] = useState<unknown[]>([]);
   const [loading, setLoading] = useState(false);
   const [showAddPersona, setShowAddPersona] = useState(false);
   const [showAddCentro, setShowAddCentro] = useState(false);
   const [showAddDenuncia, setShowAddDenuncia] = useState(false);
+  const [showAddVoluntario, setShowAddVoluntario] = useState(false);
 
-  const fetchResults = useCallback(async (q: string, currentTab: Tab) => {
+  const fetchResults = useCallback(async (q: string, currentTab: Tab, est: string) => {
     setLoading(true);
     try {
-      const res = await fetch(`${ENDPOINTS[currentTab]}?q=${encodeURIComponent(q)}`);
+      const params = new URLSearchParams();
+      if (q) params.set('q', q);
+      if (est && currentTab !== 'denuncias') params.set('estado', est);
+      const res = await fetch(`${ENDPOINTS[currentTab]}?${params}`);
       const data = await res.json() as unknown[];
       setResults(Array.isArray(data) ? data : []);
     } catch {
@@ -62,9 +75,9 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const t = setTimeout(() => fetchResults(query, tab), 300);
+    const t = setTimeout(() => fetchResults(query, tab, estado), 300);
     return () => clearTimeout(t);
-  }, [query, tab, fetchResults]);
+  }, [query, tab, estado, fetchResults]);
 
   const handleTabChange = (newTab: Tab) => {
     setTab(newTab);
@@ -74,7 +87,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#f8f7f2]">
-      {/* Hero */}
+      {/* ── Hero ── */}
       <section id="buscar" className="bg-[#17221c] py-14 px-5">
         <div className="mx-auto max-w-4xl text-center">
           <p className="mb-3 text-sm font-medium uppercase tracking-widest text-[#f0d963]">
@@ -87,9 +100,9 @@ export default function Home() {
             Apoyo a damnificados y afectados por el terremoto en Venezuela
           </p>
           <SearchBar value={query} onChange={setQuery} />
+          <StatsBar />
           <div className="mt-6">
-            <button
-              onClick={shareApp}
+            <button onClick={shareApp}
               className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/20 transition-colors">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -101,55 +114,73 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Contenido */}
+      {/* ── Avisos oficiales ── */}
+      <AvisoBanner />
+
+      {/* ── Contenido ── */}
       <div className="mx-auto max-w-6xl px-5 py-8">
+
         {/* Tabs + acciones */}
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          {/* Tab bar */}
-          <div className="inline-flex rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
+        <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="inline-flex flex-wrap gap-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
             {TABS.map(t => (
-              <button
-                key={t.value}
-                type="button"
-                onClick={() => handleTabChange(t.value)}
-                className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+              <button key={t.value} type="button" onClick={() => handleTabChange(t.value)}
+                className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                   tab === t.value
                     ? t.value === 'denuncias'
                       ? 'bg-red-600 text-white shadow-sm'
                       : 'bg-[#1f7a4d] text-white shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
+                }`}>
                 {t.icon} {t.label}
               </button>
             ))}
           </div>
 
-          {/* Action buttons */}
-          <div className="flex gap-3">
+          <div className="flex gap-2">
             {tab === 'personas' && (
-              <button
-                onClick={() => setShowAddPersona(true)}
+              <button onClick={() => setShowAddPersona(true)}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-[#1f7a4d] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#17663f] transition-colors shadow-sm">
-                <span className="text-lg leading-none">+</span> Agregar Persona
+                + Agregar Persona
               </button>
             )}
             {tab === 'centros' && (
-              <button
-                onClick={() => setShowAddCentro(true)}
+              <button onClick={() => setShowAddCentro(true)}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-[#1f7a4d] px-4 py-2.5 text-sm font-semibold text-[#1f7a4d] hover:bg-[#eef6f1] transition-colors">
-                <span className="text-lg leading-none">+</span> Agregar Centro
+                + Agregar Centro
+              </button>
+            )}
+            {tab === 'voluntarios' && (
+              <button onClick={() => setShowAddVoluntario(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-[#1f7a4d] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#17663f] transition-colors shadow-sm">
+                🙋 Ser voluntario
               </button>
             )}
             {tab === 'denuncias' && (
-              <button
-                onClick={() => setShowAddDenuncia(true)}
+              <button onClick={() => setShowAddDenuncia(true)}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 transition-colors shadow-sm">
                 🚨 Hacer denuncia anónima
               </button>
             )}
           </div>
         </div>
+
+        {/* Filtro por estado */}
+        {tab !== 'denuncias' && (
+          <div className="mb-5 flex items-center gap-3">
+            <label className="text-sm font-medium text-gray-600 shrink-0">Filtrar por estado:</label>
+            <select value={estado} onChange={e => setEstado(e.target.value)}
+              className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 focus:border-[#1f7a4d] focus:outline-none shadow-sm">
+              <option value="">Todos los estados</option>
+              {ESTADOS_VENEZUELA.map(e => <option key={e} value={e}>{e}</option>)}
+            </select>
+            {estado && (
+              <button onClick={() => setEstado('')} className="text-xs text-gray-400 hover:text-gray-700">
+                ✕ Limpiar
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Aviso privacidad denuncias */}
         {tab === 'denuncias' && (
@@ -159,6 +190,19 @@ export default function Home() {
               <p className="text-sm font-semibold text-red-800">Denuncias completamente anónimas</p>
               <p className="text-xs text-red-600 mt-0.5">
                 No almacenamos ningún dato personal. Puedes reportar robos, extorsiones, abusos de autoridad u otras anomalías con total privacidad.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Aviso voluntarios */}
+        {tab === 'voluntarios' && (
+          <div className="mb-5 flex items-start gap-3 rounded-xl bg-[#eef6f1] border border-[#1f7a4d]/20 px-4 py-3">
+            <span className="text-2xl shrink-0">🙋</span>
+            <div>
+              <p className="text-sm font-semibold text-[#17221c]">¿Puedes ayudar?</p>
+              <p className="text-xs text-[#526058] mt-0.5">
+                Regístrate como voluntario para conectarte con centros y familias que necesitan apoyo. Tu número de teléfono es opcional.
               </p>
             </div>
           </div>
@@ -174,18 +218,20 @@ export default function Home() {
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <p className="text-5xl mb-4">{TABS.find(t => t.value === tab)?.icon}</p>
             <p className="text-base font-medium text-gray-600">
-              {query ? `No se encontraron resultados para "${query}"` : EMPTY_LABELS[tab]}
+              {query || estado ? `No se encontraron resultados${estado ? ` en ${estado}` : ''}${query ? ` para "${query}"` : ''}` : EMPTY_LABELS[tab]}
             </p>
             <p className="text-sm text-gray-400 mt-2">
               {tab === 'denuncias'
                 ? 'Usa el botón de arriba para registrar una denuncia anónima'
+                : tab === 'voluntarios'
+                ? 'Usa el botón para registrarte como voluntario'
                 : 'Usa los botones de arriba para agregar el primero'}
             </p>
           </div>
         ) : (
           <>
             <p className="mb-4 text-sm text-gray-500">
-              {results.length} resultado{results.length !== 1 ? 's' : ''} encontrado{results.length !== 1 ? 's' : ''}
+              {results.length} resultado{results.length !== 1 ? 's' : ''}{estado ? ` en ${estado}` : ''}
             </p>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {tab === 'personas' &&
@@ -197,26 +243,18 @@ export default function Home() {
               {tab === 'denuncias' &&
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (results as any[]).map(d => <DenunciaCard key={d.id} denuncia={d} />)}
+              {tab === 'voluntarios' &&
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (results as any[]).map(v => <VoluntarioCard key={v.id} voluntario={v} />)}
             </div>
           </>
         )}
       </div>
 
-      <AgregarPersonaModal
-        open={showAddPersona}
-        onClose={() => setShowAddPersona(false)}
-        onSuccess={() => fetchResults(query, tab)}
-      />
-      <AgregarCentroModal
-        open={showAddCentro}
-        onClose={() => setShowAddCentro(false)}
-        onSuccess={() => fetchResults(query, tab)}
-      />
-      <AgregarDenunciaModal
-        open={showAddDenuncia}
-        onClose={() => setShowAddDenuncia(false)}
-        onSuccess={() => fetchResults(query, tab)}
-      />
+      <AgregarPersonaModal open={showAddPersona} onClose={() => setShowAddPersona(false)} onSuccess={() => fetchResults(query, tab, estado)} />
+      <AgregarCentroModal open={showAddCentro} onClose={() => setShowAddCentro(false)} onSuccess={() => fetchResults(query, tab, estado)} />
+      <AgregarDenunciaModal open={showAddDenuncia} onClose={() => setShowAddDenuncia(false)} onSuccess={() => fetchResults(query, tab, estado)} />
+      <AgregarVoluntarioModal open={showAddVoluntario} onClose={() => setShowAddVoluntario(false)} onSuccess={() => fetchResults(query, tab, estado)} />
     </main>
   );
 }

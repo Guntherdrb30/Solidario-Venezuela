@@ -13,7 +13,8 @@ interface Props {
 const EMPTY = {
   nombre: '', tipo: '', estado: '', ciudad: '',
   direccion: '', prefijo: '0414', telefono_num: '',
-  email: '', horario: '', descripcion: '', latitud: '', longitud: '',
+  email: '', horario: '', descripcion: '',
+  necesidades: '', disponible: '', latitud: '', longitud: '',
 };
 
 export function AgregarCentroModal({ open, onClose, onSuccess }: Props) {
@@ -45,6 +46,8 @@ export function AgregarCentroModal({ open, onClose, onSuccess }: Props) {
           email: form.email || null,
           horario: form.horario || null,
           descripcion: form.descripcion || null,
+          necesidades: form.necesidades || null,
+          disponible: form.disponible || null,
           latitud: form.latitud || null,
           longitud: form.longitud || null,
         }),
@@ -132,6 +135,27 @@ export function AgregarCentroModal({ open, onClose, onSuccess }: Props) {
             <input type="text" value={form.horario} onChange={e => set('horario', e.target.value)}
               placeholder="Ej: Lun-Vie 8am-5pm"
               className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#1f7a4d] focus:outline-none" />
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                ¿Qué necesitan? <span className="text-gray-400 font-normal">(opcional)</span>
+              </label>
+              <textarea value={form.necesidades} onChange={e => set('necesidades', e.target.value)}
+                rows={2} maxLength={300}
+                placeholder="Ej: Agua, medicamentos, ropa talla M, generadores..."
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#1f7a4d] focus:outline-none resize-none" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                ¿Qué tienen disponible? <span className="text-gray-400 font-normal">(opcional)</span>
+              </label>
+              <textarea value={form.disponible} onChange={e => set('disponible', e.target.value)}
+                rows={2} maxLength={300}
+                placeholder="Ej: Comida caliente, camas, primeros auxilios..."
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#1f7a4d] focus:outline-none resize-none" />
+            </div>
           </div>
 
           <LocationCapture

@@ -56,6 +56,33 @@ export async function POST() {
     )
   `;
 
+  await sql`
+    CREATE TABLE IF NOT EXISTS voluntarios (
+      id SERIAL PRIMARY KEY,
+      nombre VARCHAR(100) NOT NULL,
+      habilidad VARCHAR(100) NOT NULL,
+      estado VARCHAR(50) NOT NULL,
+      ciudad VARCHAR(100) NOT NULL,
+      telefono VARCHAR(20),
+      disponibilidad VARCHAR(200),
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS avisos (
+      id SERIAL PRIMARY KEY,
+      titulo VARCHAR(200) NOT NULL,
+      contenido TEXT NOT NULL,
+      tipo VARCHAR(20) DEFAULT 'info',
+      activo BOOLEAN DEFAULT TRUE,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+
+  await sql`ALTER TABLE centros_ayuda ADD COLUMN IF NOT EXISTS necesidades TEXT`;
+  await sql`ALTER TABLE centros_ayuda ADD COLUMN IF NOT EXISTS disponible TEXT`;
+
   // Add lat/lng columns if they don't exist yet (idempotent)
   await sql`ALTER TABLE personas ADD COLUMN IF NOT EXISTS latitud DOUBLE PRECISION`;
   await sql`ALTER TABLE personas ADD COLUMN IF NOT EXISTS longitud DOUBLE PRECISION`;

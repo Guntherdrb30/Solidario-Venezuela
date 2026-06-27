@@ -49,11 +49,12 @@ export async function POST(request: Request) {
   const longitud = body.longitud ? Number(body.longitud) : null;
 
   const rows = await sql`
-    INSERT INTO centros_ayuda (nombre, tipo, estado, ciudad, direccion, telefono, email, horario, descripcion, latitud, longitud)
+    INSERT INTO centros_ayuda (nombre, tipo, estado, ciudad, direccion, telefono, email, horario, descripcion, necesidades, disponible, latitud, longitud)
     VALUES (
       ${nombre}, ${sanitize(body.tipo)}, ${estado}, ${ciudad},
       ${sanitize(body.direccion)}, ${telefono}, ${email},
       ${sanitize(body.horario)}, ${sanitize(body.descripcion)},
+      ${sanitize(body.necesidades)}, ${sanitize(body.disponible)},
       ${latitud}, ${longitud}
     )
     RETURNING *
