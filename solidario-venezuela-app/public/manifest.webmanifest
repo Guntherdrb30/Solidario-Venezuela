@@ -1,0 +1,18 @@
+{
+  "name": "Solidario Venezuela",
+  "short_name": "Solidario",
+  "description": "Plataforma social para organizar iniciativas, aliados y apoyo solidario en Venezuela.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f8f7f2",
+  "theme_color": "#1f7a4d",
+  "icons": [
+    {
+      "src": "/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

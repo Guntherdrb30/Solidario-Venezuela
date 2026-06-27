@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 const focusAreas = [
   {
@@ -24,34 +25,16 @@ const steps = [
   "Dar seguimiento a cada iniciativa.",
 ];
 
+const platformModules = [
+  "Registro de solicitudes de ayuda",
+  "Directorio de aliados y voluntarios",
+  "Verificacion de casos e iniciativas",
+  "Reportes publicos de impacto",
+];
+
 export default function Home() {
   return (
     <main className="min-h-screen bg-[#f8f7f2] text-[#1d2520]">
-      <header className="border-b border-[#ddd8c8] bg-[#f8f7f2]/95">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
-          <a className="flex items-center gap-3" href="#inicio">
-            <span className="flex size-10 items-center justify-center rounded-full bg-[#1f7a4d] text-sm font-bold text-white">
-              SV
-            </span>
-            <span className="text-base font-semibold tracking-tight">
-              Solidario Venezuela
-            </span>
-          </a>
-
-          <nav className="hidden items-center gap-6 text-sm font-medium text-[#526058] sm:flex">
-            <a className="transition hover:text-[#1f7a4d]" href="#iniciativas">
-              Iniciativas
-            </a>
-            <a className="transition hover:text-[#1f7a4d]" href="#proceso">
-              Proceso
-            </a>
-            <a className="transition hover:text-[#1f7a4d]" href="#contacto">
-              Contacto
-            </a>
-          </nav>
-        </div>
-      </header>
-
       <section id="inicio" className="mx-auto max-w-6xl px-5 py-16 sm:px-8 lg:py-24">
         <div className="grid gap-12 lg:grid-cols-[1.08fr_0.92fr] lg:items-center">
           <div>
@@ -75,9 +58,9 @@ export default function Home() {
               </a>
               <a
                 className="inline-flex min-h-12 items-center justify-center rounded-md border border-[#bfc7bd] px-6 text-sm font-semibold text-[#25332b] transition hover:border-[#1f7a4d] hover:text-[#1f7a4d]"
-                href="#contacto"
+                href="/descargar-app"
               >
-                Contactar equipo
+                Descargar app
               </a>
             </div>
           </div>
@@ -117,6 +100,35 @@ export default function Home() {
                 estructura clara para crecer hacia formularios, paneles y reportes.
               </p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b border-[#ddd8c8] bg-[#eef6f1]">
+        <div className="mx-auto grid max-w-6xl gap-8 px-5 py-14 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#1f7a4d]">
+              Base operativa
+            </p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-normal text-[#16201a]">
+              Pensada para pasar de informacion a gestion real.
+            </h2>
+            <p className="mt-4 leading-7 text-[#536057]">
+              La primera fase deja la presencia publica lista. Las siguientes
+              funciones deben convertirla en una herramienta de trabajo para
+              registrar, validar, coordinar y medir ayuda humanitaria.
+            </p>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            {platformModules.map((module) => (
+              <div
+                className="rounded-lg border border-[#d3dfd7] bg-white p-5 text-sm font-semibold text-[#27352d]"
+                key={module}
+              >
+                {module}
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -195,6 +207,12 @@ export default function Home() {
           >
             Escribir al proyecto
           </a>
+          <Link
+            className="inline-flex min-h-12 items-center justify-center rounded-md border border-white/30 px-6 text-sm font-semibold text-white transition hover:border-[#f0d963] hover:text-[#f0d963]"
+            href="/terminos"
+          >
+            Ver condiciones de uso
+          </Link>
         </div>
       </section>
     </main>
