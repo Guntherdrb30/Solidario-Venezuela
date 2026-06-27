@@ -6,7 +6,7 @@ export function SiteHeader() {
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3 sm:px-8">
         <Link className="flex items-center gap-3" href="/">
           <span
-            className="flex size-10 items-center justify-center rounded-full text-sm font-bold text-white shadow-md overflow-hidden relative"
+            className="flex size-10 items-center justify-center rounded-full text-sm font-bold text-white shadow-md overflow-hidden"
             style={{ background: 'linear-gradient(180deg, #FFD100 33.3%, #002D62 33.3%, #002D62 66.6%, #CF142B 66.6%)' }}
           >
             <span style={{ textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}>SV</span>
@@ -17,10 +17,10 @@ export function SiteHeader() {
         </Link>
 
         <nav className="hidden items-center gap-6 text-sm font-medium text-[#526058] md:flex">
-          <Link className="transition hover:text-[#1f7a4d]" href="/">
+          <Link className="transition hover:text-[#1f7a4d]" href="/#personas">
             Personas
           </Link>
-          <Link className="transition hover:text-[#1f7a4d]" href="/">
+          <Link className="transition hover:text-[#1f7a4d]" href="/#centros">
             Centros de Ayuda
           </Link>
           <Link className="transition hover:text-[#1f7a4d]" href="/seguridad">
@@ -28,12 +28,12 @@ export function SiteHeader() {
           </Link>
         </nav>
 
-        <Link
-          href="/"
+        <a
+          href="/#buscar"
           className="inline-flex min-h-9 items-center justify-center rounded-md bg-[#1f7a4d] px-4 text-sm font-semibold text-white transition hover:bg-[#17663f]"
         >
           Buscar
-        </Link>
+        </a>
       </div>
     </header>
   );

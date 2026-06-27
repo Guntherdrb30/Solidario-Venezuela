@@ -71,18 +71,23 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Email inválido.' }, { status: 400 });
   }
 
+  const latitud = body.latitud ? Number(body.latitud) : null;
+  const longitud = body.longitud ? Number(body.longitud) : null;
+
   const rows = await sql`
     INSERT INTO personas (
       nombre, apellido, cedula_tipo, cedula_numero, fecha_nacimiento,
       genero, estado, ciudad, telefono, email, foto_url,
-      ultima_vez_fecha, ultima_vez_lugar, descripcion, estado_busqueda
+      ultima_vez_fecha, ultima_vez_lugar, descripcion, estado_busqueda,
+      latitud, longitud
     ) VALUES (
       ${nombre}, ${apellido}, ${cedula_tipo}, ${cedula_numero},
       ${sanitize(body.fecha_nacimiento)}, ${sanitize(body.genero)},
       ${estado}, ${ciudad}, ${telefono}, ${email},
       ${sanitize(body.foto_url)}, ${sanitize(body.ultima_vez_fecha)},
       ${sanitize(body.ultima_vez_lugar)}, ${sanitize(body.descripcion)},
-      ${sanitize(body.estado_busqueda) ?? 'buscando'}
+      ${sanitize(body.estado_busqueda) ?? 'buscando'},
+      ${latitud}, ${longitud}
     )
     RETURNING *
   `;

@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { VenezuelaSelects } from './VenezuelaSelects';
+import { LocationCapture } from './LocationCapture';
 import { TIPOS_CENTRO, PREFIJOS_MOVIL } from '@/lib/venezuela-data';
 
 interface Props {
@@ -12,7 +13,7 @@ interface Props {
 const EMPTY = {
   nombre: '', tipo: '', estado: '', ciudad: '',
   direccion: '', prefijo: '0414', telefono_num: '',
-  email: '', horario: '', descripcion: '',
+  email: '', horario: '', descripcion: '', latitud: '', longitud: '',
 };
 
 export function AgregarCentroModal({ open, onClose, onSuccess }: Props) {
@@ -44,6 +45,8 @@ export function AgregarCentroModal({ open, onClose, onSuccess }: Props) {
           email: form.email || null,
           horario: form.horario || null,
           descripcion: form.descripcion || null,
+          latitud: form.latitud || null,
+          longitud: form.longitud || null,
         }),
       });
 
@@ -130,6 +133,11 @@ export function AgregarCentroModal({ open, onClose, onSuccess }: Props) {
               placeholder="Ej: Lun-Vie 8am-5pm"
               className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#1f7a4d] focus:outline-none" />
           </div>
+
+          <LocationCapture
+            latitud={form.latitud} longitud={form.longitud}
+            onCapture={(lat, lng) => { set('latitud', lat); set('longitud', lng); }}
+          />
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>

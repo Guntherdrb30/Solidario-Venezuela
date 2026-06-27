@@ -45,12 +45,16 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Email inválido.' }, { status: 400 });
   }
 
+  const latitud = body.latitud ? Number(body.latitud) : null;
+  const longitud = body.longitud ? Number(body.longitud) : null;
+
   const rows = await sql`
-    INSERT INTO centros_ayuda (nombre, tipo, estado, ciudad, direccion, telefono, email, horario, descripcion)
+    INSERT INTO centros_ayuda (nombre, tipo, estado, ciudad, direccion, telefono, email, horario, descripcion, latitud, longitud)
     VALUES (
       ${nombre}, ${sanitize(body.tipo)}, ${estado}, ${ciudad},
       ${sanitize(body.direccion)}, ${telefono}, ${email},
-      ${sanitize(body.horario)}, ${sanitize(body.descripcion)}
+      ${sanitize(body.horario)}, ${sanitize(body.descripcion)},
+      ${latitud}, ${longitud}
     )
     RETURNING *
   `;

@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 interface Centro {
   id: number;
   nombre: string;
@@ -13,7 +15,7 @@ interface Centro {
 
 export function CentroCard({ centro }: { centro: Centro }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
+    <Link href={`/centros/${centro.id}`} className="block rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow hover:border-[#1f7a4d]/30 cursor-pointer">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="font-semibold text-gray-900 truncate">{centro.nombre}</p>
@@ -36,6 +38,6 @@ export function CentroCard({ centro }: { centro: Centro }) {
         {centro.email && <span>✉️ {centro.email}</span>}
         {centro.horario && <span>🕐 {centro.horario}</span>}
       </div>
-    </div>
+    </Link>
   );
 }

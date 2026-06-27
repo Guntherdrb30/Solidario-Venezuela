@@ -46,5 +46,6 @@ export const ESTADOS_BUSQUEDA = [
 
 export const TIPOS_CENTRO = [
   'Refugio', 'Comedor Popular', 'Centro Médico', 'Asesoría Legal',
-  'Centro Educativo', 'Otros',
+  'Centro Educativo', 'Centro de Acopio de Insumos', 'Distribución de Alimentos',
+  'Ayuda Humanitaria', 'Otros',
 ];

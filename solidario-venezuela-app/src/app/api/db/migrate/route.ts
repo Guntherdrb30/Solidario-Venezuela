@@ -42,5 +42,11 @@ export async function POST() {
     )
   `;
 
+  // Add lat/lng columns if they don't exist yet (idempotent)
+  await sql`ALTER TABLE personas ADD COLUMN IF NOT EXISTS latitud DOUBLE PRECISION`;
+  await sql`ALTER TABLE personas ADD COLUMN IF NOT EXISTS longitud DOUBLE PRECISION`;
+  await sql`ALTER TABLE centros_ayuda ADD COLUMN IF NOT EXISTS latitud DOUBLE PRECISION`;
+  await sql`ALTER TABLE centros_ayuda ADD COLUMN IF NOT EXISTS longitud DOUBLE PRECISION`;
+
   return Response.json({ ok: true, message: 'Tablas creadas correctamente' });
 }

@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 interface Persona {
   id: number;
   nombre: string;
@@ -23,7 +25,7 @@ export function PersonaCard({ persona }: { persona: Persona }) {
   const initials = `${persona.nombre[0] ?? ''}${persona.apellido[0] ?? ''}`.toUpperCase();
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
+    <Link href={`/personas/${persona.id}`} className="block rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow hover:border-[#1f7a4d]/30 cursor-pointer">
       <div className="flex gap-4">
         {persona.foto_url ? (
           <img
@@ -63,6 +65,6 @@ export function PersonaCard({ persona }: { persona: Persona }) {
           {badge.label}
         </span>
       </div>
-    </div>
+    </Link>
   );
 }

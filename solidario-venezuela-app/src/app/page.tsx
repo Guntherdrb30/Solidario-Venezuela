@@ -7,6 +7,17 @@ import { CentroCard } from '@/components/CentroCard';
 import { AgregarPersonaModal } from '@/components/AgregarPersonaModal';
 import { AgregarCentroModal } from '@/components/AgregarCentroModal';
 
+async function shareApp() {
+  const url = window.location.origin;
+  const text = 'Solidario Venezuela — Encuentra personas desplazadas y centros de ayuda en Venezuela.';
+  if (navigator.share) {
+    await navigator.share({ title: 'Solidario Venezuela', text, url });
+  } else {
+    await navigator.clipboard.writeText(`${text}\n${url}`);
+    alert('Enlace copiado al portapapeles.');
+  }
+}
+
 type Tab = 'personas' | 'centros';
 
 export default function Home() {
@@ -39,12 +50,13 @@ export default function Home() {
   const handleTabChange = (newTab: Tab) => {
     setTab(newTab);
     setQuery('');
+    setResults([]);
   };
 
   return (
     <main className="min-h-screen bg-[#f8f7f2]">
       {/* Hero con buscador */}
-      <section className="bg-[#17221c] py-14 px-5">
+      <section id="buscar" className="bg-[#17221c] py-14 px-5">
         <div className="mx-auto max-w-4xl text-center">
           <p className="mb-3 text-sm font-medium uppercase tracking-widest text-[#f0d963]">
             Solidario Venezuela
@@ -53,6 +65,17 @@ export default function Home() {
             Busca personas o centros de ayuda en Venezuela
           </h1>
           <SearchBar value={query} onChange={setQuery} />
+          <div className="mt-6">
+            <button
+              onClick={shareApp}
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/20 transition-colors">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+              </svg>
+              Compartir esta aplicación
+            </button>
+          </div>
         </div>
       </section>
 

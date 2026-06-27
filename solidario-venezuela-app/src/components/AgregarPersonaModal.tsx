@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { VenezuelaSelects } from './VenezuelaSelects';
 import { ImageUpload } from './ImageUpload';
+import { LocationCapture } from './LocationCapture';
 import { GENEROS, ESTADOS_BUSQUEDA, PREFIJOS_MOVIL } from '@/lib/venezuela-data';
 
 interface Props {
@@ -15,7 +16,7 @@ const EMPTY = {
   fecha_nacimiento: '', genero: '', estado: '', ciudad: '',
   prefijo: '0414', telefono_num: '', email: '', foto_url: '',
   ultima_vez_fecha: '', ultima_vez_lugar: '', descripcion: '',
-  estado_busqueda: 'buscando',
+  estado_busqueda: 'buscando', latitud: '', longitud: '',
 };
 
 export function AgregarPersonaModal({ open, onClose, onSuccess }: Props) {
@@ -53,6 +54,8 @@ export function AgregarPersonaModal({ open, onClose, onSuccess }: Props) {
           ultima_vez_lugar: form.ultima_vez_lugar || null,
           descripcion: form.descripcion || null,
           estado_busqueda: form.estado_busqueda,
+          latitud: form.latitud || null,
+          longitud: form.longitud || null,
         }),
       });
 
@@ -205,6 +208,15 @@ export function AgregarPersonaModal({ open, onClose, onSuccess }: Props) {
                 className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#1f7a4d] focus:outline-none resize-none" />
               <p className="text-xs text-gray-400 text-right">{form.descripcion.length}/500</p>
             </div>
+          </section>
+
+          {/* Ubicación GPS */}
+          <section>
+            <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-4">Ubicación GPS</h3>
+            <LocationCapture
+              latitud={form.latitud} longitud={form.longitud}
+              onCapture={(lat, lng) => { set('latitud', lat); set('longitud', lng); }}
+            />
           </section>
 
           {/* Estado búsqueda */}
