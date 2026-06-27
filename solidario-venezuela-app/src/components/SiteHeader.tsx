@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { PWAInstallButton } from './PWAInstallButton';
 
 export function SiteHeader() {
   return (
@@ -24,12 +25,15 @@ export function SiteHeader() {
           <Link className="transition hover:text-red-600 font-semibold text-red-600" href="/emergencias">🆘 Emergencias</Link>
         </nav>
 
-        <a
-          href="/#buscar"
-          className="inline-flex min-h-9 items-center justify-center rounded-md bg-[#1f7a4d] px-4 text-sm font-semibold text-white transition hover:bg-[#17663f]"
-        >
-          Buscar
-        </a>
+        <div className="flex items-center gap-2">
+          <PWAInstallButton />
+          <a
+            href="/#buscar"
+            className="inline-flex min-h-9 items-center justify-center rounded-md bg-[#1f7a4d] px-4 text-sm font-semibold text-white transition hover:bg-[#17663f]"
+          >
+            Buscar
+          </a>
+        </div>
       </div>
     </header>
   );
