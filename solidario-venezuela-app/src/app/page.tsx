@@ -59,11 +59,14 @@ export default function Home() {
       <section id="buscar" className="bg-[#17221c] py-14 px-5">
         <div className="mx-auto max-w-4xl text-center">
           <p className="mb-3 text-sm font-medium uppercase tracking-widest text-[#f0d963]">
-            Solidario Venezuela
+            Solidario Venezuela — Terremoto Venezuela
           </p>
-          <h1 className="mb-8 text-3xl font-bold text-white sm:text-4xl">
-            Busca personas o centros de ayuda en Venezuela
+          <h1 className="mb-3 text-3xl font-bold text-white sm:text-4xl">
+            Busca personas desaparecidas o centros de ayuda
           </h1>
+          <p className="mb-8 text-[#a8c4b0] text-base sm:text-lg">
+            Apoyo a damnificados y afectados por el terremoto en Venezuela
+          </p>
           <SearchBar value={query} onChange={setQuery} />
           <div className="mt-6">
             <button
