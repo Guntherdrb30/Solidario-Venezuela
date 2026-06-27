@@ -23,6 +23,9 @@ export function SiteHeader() {
           <Link className="transition hover:text-[#1f7a4d]" href="/#centros">
             Centros de Ayuda
           </Link>
+          <Link className="transition hover:text-red-600 text-red-500 font-semibold" href="/#denuncias">
+            🚨 Denuncias
+          </Link>
           <Link className="transition hover:text-[#1f7a4d]" href="/seguridad">
             Seguridad
           </Link>

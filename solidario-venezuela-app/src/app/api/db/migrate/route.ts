@@ -42,6 +42,20 @@ export async function POST() {
     )
   `;
 
+  await sql`
+    CREATE TABLE IF NOT EXISTS denuncias (
+      id SERIAL PRIMARY KEY,
+      tipo VARCHAR(50) NOT NULL,
+      estado VARCHAR(50) NOT NULL,
+      ciudad VARCHAR(100) NOT NULL,
+      descripcion TEXT NOT NULL,
+      fecha_hecho DATE,
+      latitud DOUBLE PRECISION,
+      longitud DOUBLE PRECISION,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+
   // Add lat/lng columns if they don't exist yet (idempotent)
   await sql`ALTER TABLE personas ADD COLUMN IF NOT EXISTS latitud DOUBLE PRECISION`;
   await sql`ALTER TABLE personas ADD COLUMN IF NOT EXISTS longitud DOUBLE PRECISION`;

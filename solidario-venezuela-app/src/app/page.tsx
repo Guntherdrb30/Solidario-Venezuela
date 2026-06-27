@@ -1,11 +1,12 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { SearchBar } from '@/components/SearchBar';
-import { TabSelector } from '@/components/TabSelector';
 import { PersonaCard } from '@/components/PersonaCard';
 import { CentroCard } from '@/components/CentroCard';
+import { DenunciaCard } from '@/components/DenunciaCard';
 import { AgregarPersonaModal } from '@/components/AgregarPersonaModal';
 import { AgregarCentroModal } from '@/components/AgregarCentroModal';
+import { AgregarDenunciaModal } from '@/components/AgregarDenunciaModal';
 
 async function shareApp() {
   const url = window.location.origin;
@@ -18,7 +19,25 @@ async function shareApp() {
   }
 }
 
-type Tab = 'personas' | 'centros';
+type Tab = 'personas' | 'centros' | 'denuncias';
+
+const TABS: { value: Tab; label: string; icon: string }[] = [
+  { value: 'personas',   label: 'Personas',        icon: '👤' },
+  { value: 'centros',    label: 'Centros de Ayuda', icon: '🏠' },
+  { value: 'denuncias',  label: 'Denuncias',        icon: '🚨' },
+];
+
+const ENDPOINTS: Record<Tab, string> = {
+  personas:  '/api/personas',
+  centros:   '/api/centros',
+  denuncias: '/api/denuncias',
+};
+
+const EMPTY_LABELS: Record<Tab, string> = {
+  personas:  'No hay personas registradas aún',
+  centros:   'No hay centros de ayuda registrados aún',
+  denuncias: 'No hay denuncias registradas aún',
+};
 
 export default function Home() {
   const [tab, setTab] = useState<Tab>('personas');
@@ -27,12 +46,12 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [showAddPersona, setShowAddPersona] = useState(false);
   const [showAddCentro, setShowAddCentro] = useState(false);
+  const [showAddDenuncia, setShowAddDenuncia] = useState(false);
 
   const fetchResults = useCallback(async (q: string, currentTab: Tab) => {
     setLoading(true);
     try {
-      const endpoint = currentTab === 'personas' ? '/api/personas' : '/api/centros';
-      const res = await fetch(`${endpoint}?q=${encodeURIComponent(q)}`);
+      const res = await fetch(`${ENDPOINTS[currentTab]}?q=${encodeURIComponent(q)}`);
       const data = await res.json() as unknown[];
       setResults(Array.isArray(data) ? data : []);
     } catch {
@@ -55,7 +74,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#f8f7f2]">
-      {/* Hero con buscador */}
+      {/* Hero */}
       <section id="buscar" className="bg-[#17221c] py-14 px-5">
         <div className="mx-auto max-w-4xl text-center">
           <p className="mb-3 text-sm font-medium uppercase tracking-widest text-[#f0d963]">
@@ -86,22 +105,64 @@ export default function Home() {
       <div className="mx-auto max-w-6xl px-5 py-8">
         {/* Tabs + acciones */}
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <TabSelector value={tab} onChange={handleTabChange} />
+          {/* Tab bar */}
+          <div className="inline-flex rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
+            {TABS.map(t => (
+              <button
+                key={t.value}
+                type="button"
+                onClick={() => handleTabChange(t.value)}
+                className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+                  tab === t.value
+                    ? t.value === 'denuncias'
+                      ? 'bg-red-600 text-white shadow-sm'
+                      : 'bg-[#1f7a4d] text-white shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                {t.icon} {t.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Action buttons */}
           <div className="flex gap-3">
-            <button
-              onClick={() => setShowAddPersona(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-[#1f7a4d] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#17663f] transition-colors shadow-sm"
-            >
-              <span className="text-lg leading-none">+</span> Agregar Persona
-            </button>
-            <button
-              onClick={() => setShowAddCentro(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[#1f7a4d] px-4 py-2.5 text-sm font-semibold text-[#1f7a4d] hover:bg-[#eef6f1] transition-colors"
-            >
-              <span className="text-lg leading-none">+</span> Agregar Centro
-            </button>
+            {tab === 'personas' && (
+              <button
+                onClick={() => setShowAddPersona(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-[#1f7a4d] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#17663f] transition-colors shadow-sm">
+                <span className="text-lg leading-none">+</span> Agregar Persona
+              </button>
+            )}
+            {tab === 'centros' && (
+              <button
+                onClick={() => setShowAddCentro(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-[#1f7a4d] px-4 py-2.5 text-sm font-semibold text-[#1f7a4d] hover:bg-[#eef6f1] transition-colors">
+                <span className="text-lg leading-none">+</span> Agregar Centro
+              </button>
+            )}
+            {tab === 'denuncias' && (
+              <button
+                onClick={() => setShowAddDenuncia(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 transition-colors shadow-sm">
+                🚨 Hacer denuncia anónima
+              </button>
+            )}
           </div>
         </div>
+
+        {/* Aviso privacidad denuncias */}
+        {tab === 'denuncias' && (
+          <div className="mb-5 flex items-start gap-3 rounded-xl bg-red-50 border border-red-200 px-4 py-3">
+            <span className="text-red-500 text-xl shrink-0">🔒</span>
+            <div>
+              <p className="text-sm font-semibold text-red-800">Denuncias completamente anónimas</p>
+              <p className="text-xs text-red-600 mt-0.5">
+                No almacenamos ningún dato personal. Puedes reportar robos, extorsiones, abusos de autoridad u otras anomalías con total privacidad.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Resultados */}
         {loading ? (
@@ -111,16 +172,14 @@ export default function Home() {
           </div>
         ) : results.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
-            <p className="text-5xl mb-4">{tab === 'personas' ? '👤' : '🏠'}</p>
+            <p className="text-5xl mb-4">{TABS.find(t => t.value === tab)?.icon}</p>
             <p className="text-base font-medium text-gray-600">
-              {query
-                ? `No se encontraron resultados para "${query}"`
-                : tab === 'personas'
-                ? 'No hay personas registradas aún'
-                : 'No hay centros de ayuda registrados aún'}
+              {query ? `No se encontraron resultados para "${query}"` : EMPTY_LABELS[tab]}
             </p>
             <p className="text-sm text-gray-400 mt-2">
-              Usa los botones de arriba para agregar el primero
+              {tab === 'denuncias'
+                ? 'Usa el botón de arriba para registrar una denuncia anónima'
+                : 'Usa los botones de arriba para agregar el primero'}
             </p>
           </div>
         ) : (
@@ -129,11 +188,15 @@ export default function Home() {
               {results.length} resultado{results.length !== 1 ? 's' : ''} encontrado{results.length !== 1 ? 's' : ''}
             </p>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {tab === 'personas'
+              {tab === 'personas' &&
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                ? (results as any[]).map(p => <PersonaCard key={p.id} persona={p} />)
+                (results as any[]).map(p => <PersonaCard key={p.id} persona={p} />)}
+              {tab === 'centros' &&
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                : (results as any[]).map(c => <CentroCard key={c.id} centro={c} />)}
+                (results as any[]).map(c => <CentroCard key={c.id} centro={c} />)}
+              {tab === 'denuncias' &&
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (results as any[]).map(d => <DenunciaCard key={d.id} denuncia={d} />)}
             </div>
           </>
         )}
@@ -147,6 +210,11 @@ export default function Home() {
       <AgregarCentroModal
         open={showAddCentro}
         onClose={() => setShowAddCentro(false)}
+        onSuccess={() => fetchResults(query, tab)}
+      />
+      <AgregarDenunciaModal
+        open={showAddDenuncia}
+        onClose={() => setShowAddDenuncia(false)}
         onSuccess={() => fetchResults(query, tab)}
       />
     </main>
