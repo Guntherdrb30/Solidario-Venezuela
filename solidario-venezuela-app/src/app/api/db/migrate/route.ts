@@ -83,6 +83,17 @@ export async function POST() {
   await sql`ALTER TABLE centros_ayuda ADD COLUMN IF NOT EXISTS necesidades TEXT`;
   await sql`ALTER TABLE centros_ayuda ADD COLUMN IF NOT EXISTS disponible TEXT`;
 
+  await sql`
+    CREATE TABLE IF NOT EXISTS avistamientos (
+      id SERIAL PRIMARY KEY,
+      persona_id INTEGER NOT NULL REFERENCES personas(id) ON DELETE CASCADE,
+      fecha DATE,
+      lugar VARCHAR(200) NOT NULL,
+      descripcion TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+
   // Add lat/lng columns if they don't exist yet (idempotent)
   await sql`ALTER TABLE personas ADD COLUMN IF NOT EXISTS latitud DOUBLE PRECISION`;
   await sql`ALTER TABLE personas ADD COLUMN IF NOT EXISTS longitud DOUBLE PRECISION`;

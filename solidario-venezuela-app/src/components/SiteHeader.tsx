@@ -16,19 +16,12 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-6 text-sm font-medium text-[#526058] md:flex">
-          <Link className="transition hover:text-[#1f7a4d]" href="/#personas">
-            Personas
-          </Link>
-          <Link className="transition hover:text-[#1f7a4d]" href="/#centros">
-            Centros de Ayuda
-          </Link>
-          <Link className="transition hover:text-red-600 text-red-500 font-semibold" href="/#denuncias">
-            🚨 Denuncias
-          </Link>
-          <Link className="transition hover:text-[#1f7a4d]" href="/seguridad">
-            Seguridad
-          </Link>
+        <nav className="hidden items-center gap-5 text-sm font-medium text-[#526058] md:flex">
+          <Link className="transition hover:text-[#1f7a4d]" href="/">Personas</Link>
+          <Link className="transition hover:text-[#1f7a4d]" href="/">Centros</Link>
+          <Link className="transition hover:text-[#1f7a4d]" href="/">Voluntarios</Link>
+          <Link className="transition hover:text-red-600 font-semibold text-red-500" href="/">🚨 Denuncias</Link>
+          <Link className="transition hover:text-red-600 font-semibold text-red-600" href="/emergencias">🆘 Emergencias</Link>
         </nav>
 
         <a
