@@ -1,220 +1,128 @@
-import Image from "next/image";
-import Link from "next/link";
+'use client';
+import { useState, useEffect, useCallback } from 'react';
+import { SearchBar } from '@/components/SearchBar';
+import { TabSelector } from '@/components/TabSelector';
+import { PersonaCard } from '@/components/PersonaCard';
+import { CentroCard } from '@/components/CentroCard';
+import { AgregarPersonaModal } from '@/components/AgregarPersonaModal';
+import { AgregarCentroModal } from '@/components/AgregarCentroModal';
 
-const focusAreas = [
-  {
-    title: "Ayuda organizada",
-    description:
-      "Centralizamos iniciativas, necesidades y apoyos para que cada accion tenga seguimiento.",
-  },
-  {
-    title: "Gestion transparente",
-    description:
-      "La plataforma nace con una base simple para comunicar avances, prioridades y resultados.",
-  },
-  {
-    title: "Impacto local",
-    description:
-      "Pensada para Venezuela, con una experiencia ligera, movil y facil de compartir.",
-  },
-];
-
-const steps = [
-  "Identificar necesidades reales.",
-  "Conectar aliados, donantes y voluntarios.",
-  "Dar seguimiento a cada iniciativa.",
-];
-
-const platformModules = [
-  "Registro de solicitudes de ayuda",
-  "Directorio de aliados y voluntarios",
-  "Verificacion de casos e iniciativas",
-  "Reportes publicos de impacto",
-];
+type Tab = 'personas' | 'centros';
 
 export default function Home() {
+  const [tab, setTab] = useState<Tab>('personas');
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<unknown[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [showAddPersona, setShowAddPersona] = useState(false);
+  const [showAddCentro, setShowAddCentro] = useState(false);
+
+  const fetchResults = useCallback(async (q: string, currentTab: Tab) => {
+    setLoading(true);
+    try {
+      const endpoint = currentTab === 'personas' ? '/api/personas' : '/api/centros';
+      const res = await fetch(`${endpoint}?q=${encodeURIComponent(q)}`);
+      const data = await res.json() as unknown[];
+      setResults(Array.isArray(data) ? data : []);
+    } catch {
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => fetchResults(query, tab), 300);
+    return () => clearTimeout(t);
+  }, [query, tab, fetchResults]);
+
+  const handleTabChange = (newTab: Tab) => {
+    setTab(newTab);
+    setQuery('');
+  };
+
   return (
-    <main className="min-h-screen bg-[#f8f7f2] text-[#1d2520]">
-      <section id="inicio" className="mx-auto max-w-6xl px-5 py-16 sm:px-8 lg:py-24">
-        <div className="grid gap-12 lg:grid-cols-[1.08fr_0.92fr] lg:items-center">
-          <div>
-            <p className="mb-5 inline-flex rounded-full border border-[#d8c15f] bg-[#fff9dc] px-4 py-2 text-sm font-medium text-[#6c5a00]">
-              Plataforma social en construccion
-            </p>
-            <h1 className="max-w-3xl text-4xl font-semibold leading-tight tracking-normal text-[#16201a] sm:text-6xl">
-              Solidaridad organizada para apoyar a Venezuela.
-            </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-[#536057]">
-              Una base digital sencilla para conectar iniciativas, aliados y
-              personas que quieren ayudar con orden, claridad y seguimiento.
-            </p>
+    <main className="min-h-screen bg-[#f8f7f2]">
+      {/* Hero con buscador */}
+      <section className="bg-[#17221c] py-14 px-5">
+        <div className="mx-auto max-w-4xl text-center">
+          <p className="mb-3 text-sm font-medium uppercase tracking-widest text-[#f0d963]">
+            Solidario Venezuela
+          </p>
+          <h1 className="mb-8 text-3xl font-bold text-white sm:text-4xl">
+            Busca personas o centros de ayuda en Venezuela
+          </h1>
+          <SearchBar value={query} onChange={setQuery} />
+        </div>
+      </section>
 
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <a
-                className="inline-flex min-h-12 items-center justify-center rounded-md bg-[#1f7a4d] px-6 text-sm font-semibold text-white transition hover:bg-[#17663f]"
-                href="#iniciativas"
-              >
-                Ver enfoque inicial
-              </a>
-              <a
-                className="inline-flex min-h-12 items-center justify-center rounded-md border border-[#bfc7bd] px-6 text-sm font-semibold text-[#25332b] transition hover:border-[#1f7a4d] hover:text-[#1f7a4d]"
-                href="/descargar-app"
-              >
-                Descargar app
-              </a>
+      {/* Contenido */}
+      <div className="mx-auto max-w-6xl px-5 py-8">
+        {/* Tabs + acciones */}
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <TabSelector value={tab} onChange={handleTabChange} />
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowAddPersona(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#1f7a4d] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#17663f] transition-colors shadow-sm"
+            >
+              <span className="text-lg leading-none">+</span> Agregar Persona
+            </button>
+            <button
+              onClick={() => setShowAddCentro(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[#1f7a4d] px-4 py-2.5 text-sm font-semibold text-[#1f7a4d] hover:bg-[#eef6f1] transition-colors"
+            >
+              <span className="text-lg leading-none">+</span> Agregar Centro
+            </button>
+          </div>
+        </div>
+
+        {/* Resultados */}
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-24 text-gray-400">
+            <div className="mb-3 h-8 w-8 animate-spin rounded-full border-2 border-[#1f7a4d] border-t-transparent" />
+            <p className="text-sm">Buscando...</p>
+          </div>
+        ) : results.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <p className="text-5xl mb-4">{tab === 'personas' ? '👤' : '🏠'}</p>
+            <p className="text-base font-medium text-gray-600">
+              {query
+                ? `No se encontraron resultados para "${query}"`
+                : tab === 'personas'
+                ? 'No hay personas registradas aún'
+                : 'No hay centros de ayuda registrados aún'}
+            </p>
+            <p className="text-sm text-gray-400 mt-2">
+              Usa los botones de arriba para agregar el primero
+            </p>
+          </div>
+        ) : (
+          <>
+            <p className="mb-4 text-sm text-gray-500">
+              {results.length} resultado{results.length !== 1 ? 's' : ''} encontrado{results.length !== 1 ? 's' : ''}
+            </p>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {tab === 'personas'
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                ? (results as any[]).map(p => <PersonaCard key={p.id} persona={p} />)
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                : (results as any[]).map(c => <CentroCard key={c.id} centro={c} />)}
             </div>
-          </div>
+          </>
+        )}
+      </div>
 
-          <div className="overflow-hidden rounded-lg border border-[#ddd8c8] bg-white shadow-sm">
-            <Image
-              src="/solidario-hero.png"
-              alt="Mesa organizada con insumos y notas para coordinar apoyo solidario"
-              width={1280}
-              height={720}
-              priority
-              className="aspect-[16/10] w-full object-cover"
-            />
-            <div className="p-6">
-              <div className="border-b border-[#ece7d8] pb-5">
-                <p className="text-sm font-medium text-[#69766d]">Estado</p>
-                <p className="mt-2 text-2xl font-semibold text-[#16201a]">
-                  Primera version publicada
-                </p>
-              </div>
-              <dl className="grid gap-5 py-6 sm:grid-cols-3 lg:grid-cols-1">
-                <div>
-                  <dt className="text-sm text-[#69766d]">Objetivo</dt>
-                  <dd className="mt-1 font-semibold">Organizar apoyo</dd>
-                </div>
-                <div>
-                  <dt className="text-sm text-[#69766d]">Alcance</dt>
-                  <dd className="mt-1 font-semibold">Venezuela</dd>
-                </div>
-                <div>
-                  <dt className="text-sm text-[#69766d]">Modelo</dt>
-                  <dd className="mt-1 font-semibold">Aliados + iniciativas</dd>
-                </div>
-              </dl>
-              <p className="rounded-md bg-[#f1f7f3] p-4 text-sm leading-6 text-[#385241]">
-                Esta version deja lista la presencia inicial del proyecto y una
-                estructura clara para crecer hacia formularios, paneles y reportes.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="border-b border-[#ddd8c8] bg-[#eef6f1]">
-        <div className="mx-auto grid max-w-6xl gap-8 px-5 py-14 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#1f7a4d]">
-              Base operativa
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-normal text-[#16201a]">
-              Pensada para pasar de informacion a gestion real.
-            </h2>
-            <p className="mt-4 leading-7 text-[#536057]">
-              La primera fase deja la presencia publica lista. Las siguientes
-              funciones deben convertirla en una herramienta de trabajo para
-              registrar, validar, coordinar y medir ayuda humanitaria.
-            </p>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            {platformModules.map((module) => (
-              <div
-                className="rounded-lg border border-[#d3dfd7] bg-white p-5 text-sm font-semibold text-[#27352d]"
-                key={module}
-              >
-                {module}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="iniciativas" className="border-y border-[#ddd8c8] bg-white">
-        <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8">
-          <div className="max-w-2xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#c34d36]">
-              Enfoque inicial
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-normal text-[#16201a]">
-              Una plataforma simple para coordinar mejor.
-            </h2>
-          </div>
-
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
-            {focusAreas.map((area) => (
-              <article
-                className="rounded-lg border border-[#e2ded0] bg-[#fbfaf6] p-6"
-                key={area.title}
-              >
-                <h3 className="text-lg font-semibold text-[#16201a]">
-                  {area.title}
-                </h3>
-                <p className="mt-3 text-sm leading-6 text-[#5d6961]">
-                  {area.description}
-                </p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="proceso" className="mx-auto max-w-6xl px-5 py-16 sm:px-8">
-        <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#1f7a4d]">
-              Proceso
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-normal">
-              Del apoyo espontaneo a la gestion con seguimiento.
-            </h2>
-          </div>
-
-          <ol className="grid gap-4">
-            {steps.map((step, index) => (
-              <li
-                className="flex gap-4 rounded-lg border border-[#ddd8c8] bg-white p-5"
-                key={step}
-              >
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#f0d963] text-sm font-bold text-[#443900]">
-                  {index + 1}
-                </span>
-                <span className="pt-1 text-base font-medium text-[#27352d]">
-                  {step}
-                </span>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
-      <section id="contacto" className="bg-[#17221c] text-white">
-        <div className="mx-auto flex max-w-6xl flex-col gap-8 px-5 py-14 sm:px-8 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#f0d963]">
-              Contacto
-            </p>
-            <h2 className="mt-3 max-w-2xl text-3xl font-semibold tracking-normal">
-              Listo para sumar aliados, voluntarios e iniciativas verificadas.
-            </h2>
-          </div>
-          <a
-            className="inline-flex min-h-12 items-center justify-center rounded-md bg-white px-6 text-sm font-semibold text-[#17221c] transition hover:bg-[#f0d963]"
-            href="mailto:contacto@solidariovenezuela.org?subject=Quiero%20sumarme%20a%20Solidario%20Venezuela"
-          >
-            Escribir al proyecto
-          </a>
-          <Link
-            className="inline-flex min-h-12 items-center justify-center rounded-md border border-white/30 px-6 text-sm font-semibold text-white transition hover:border-[#f0d963] hover:text-[#f0d963]"
-            href="/terminos"
-          >
-            Ver condiciones de uso
-          </Link>
-        </div>
-      </section>
+      <AgregarPersonaModal
+        open={showAddPersona}
+        onClose={() => setShowAddPersona(false)}
+        onSuccess={() => fetchResults(query, tab)}
+      />
+      <AgregarCentroModal
+        open={showAddCentro}
+        onClose={() => setShowAddCentro(false)}
+        onSuccess={() => fetchResults(query, tab)}
+      />
     </main>
   );
 }
