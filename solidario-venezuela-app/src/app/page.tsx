@@ -401,29 +401,14 @@ export default function Home() {
       {/* ── Layout: Sidebar + Contenido ── */}
       <div id="resultados" className="flex items-start">
 
-        {/* Sidebar */}
-        <aside className={`
-          fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-white shadow-2xl border-r border-gray-100
-          transition-transform duration-300 ease-in-out
-          lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:w-64 lg:translate-x-0 lg:shadow-none
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        `}>
-          {/* Sidebar header */}
-          <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-5 py-5">
+        {/* ── Sidebar Desktop (always visible on lg+, in normal flow) ── */}
+        <aside className="hidden lg:flex w-64 shrink-0 sticky top-0 h-screen flex-col bg-white border-r border-gray-100 overflow-y-auto">
+          <div className="flex shrink-0 items-center border-b border-gray-100 px-5 py-5">
             <div>
               <p className="font-bold text-[#17221c] text-base">🇻🇪 Solidario Venezuela</p>
               <p className="text-xs text-gray-400 mt-0.5">Terremoto Venezuela</p>
             </div>
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 lg:hidden">
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
           </div>
-
-          {/* Nav items */}
           <nav className="flex-1 overflow-y-auto px-3 py-4">
             <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-gray-400">Secciones</p>
             <div className="space-y-0.5">
@@ -436,7 +421,7 @@ export default function Home() {
                   'bg-[#1f7a4d] text-white shadow-sm';
                 return (
                   <button key={t.value} type="button"
-                    onClick={() => { handleTabChange(t.value); setSidebarOpen(false); }}
+                    onClick={() => handleTabChange(t.value)}
                     className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium transition-all ${
                       isActive ? activeCls : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                     }`}>
@@ -448,8 +433,6 @@ export default function Home() {
               })}
             </div>
           </nav>
-
-          {/* Sidebar footer */}
           <div className="shrink-0 border-t border-gray-100 px-3 py-4 space-y-1">
             <button onClick={shareApp}
               className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors">
@@ -467,6 +450,65 @@ export default function Home() {
             </a>
           </div>
         </aside>
+
+        {/* ── Sidebar Mobile (drawer, fixed, conditional) ── */}
+        {sidebarOpen && (
+          <aside className="fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-white shadow-2xl border-r border-gray-100 lg:hidden">
+            <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-5 py-5">
+              <div>
+                <p className="font-bold text-[#17221c] text-base">🇻🇪 Solidario Venezuela</p>
+                <p className="text-xs text-gray-400 mt-0.5">Terremoto Venezuela</p>
+              </div>
+              <button
+                onClick={() => setSidebarOpen(false)}
+                className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <nav className="flex-1 overflow-y-auto px-3 py-4">
+              <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-gray-400">Secciones</p>
+              <div className="space-y-0.5">
+                {TABS.map(t => {
+                  const isActive = tab === t.value;
+                  const activeCls =
+                    t.value === 'rescate' || t.value === 'denuncias' ? 'bg-red-600 text-white shadow-sm' :
+                    t.value === 'danos'   ? 'bg-orange-500 text-white shadow-sm' :
+                    t.value === 'peritos' ? 'bg-blue-600 text-white shadow-sm' :
+                    'bg-[#1f7a4d] text-white shadow-sm';
+                  return (
+                    <button key={t.value} type="button"
+                      onClick={() => { handleTabChange(t.value); setSidebarOpen(false); }}
+                      className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium transition-all ${
+                        isActive ? activeCls : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                      }`}>
+                      <span className="shrink-0 text-xl">{t.icon}</span>
+                      <span className="flex-1">{t.label}</span>
+                      {isActive && <span className="h-2 w-2 shrink-0 rounded-full bg-white/70" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </nav>
+            <div className="shrink-0 border-t border-gray-100 px-3 py-4 space-y-1">
+              <button onClick={shareApp}
+                className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors">
+                <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+                Compartir aplicación
+              </button>
+              <a href="/api-docs" target="_blank" rel="noopener noreferrer"
+                className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors">
+                <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+                API pública / Docs
+              </a>
+            </div>
+          </aside>
+        )}
 
         {/* Contenido principal */}
         <div className="min-w-0 flex-1 px-4 py-6 lg:px-8">
