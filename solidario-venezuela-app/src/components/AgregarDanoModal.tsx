@@ -36,7 +36,8 @@ export function AgregarDanoModal({ onClose, onSuccess }: Props) {
   const [contactoNombre, setContactoNombre] = useState('');
   const [prefijo, setPrefijo] = useState('0412');
   const [telefono, setTelefono] = useState('');
-  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [latitud, setLatitud] = useState('');
+  const [longitud, setLongitud] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [ok, setOk] = useState(false);
@@ -61,7 +62,7 @@ export function AgregarDanoModal({ onClose, onSuccess }: Props) {
       if (personasAfectadas) body.personas_afectadas = Number(personasAfectadas);
       if (contactoNombre.trim()) body.contacto_nombre = contactoNombre.trim();
       if (telefono.trim()) body.contacto_telefono = `${prefijo}${telefono.trim()}`;
-      if (coords) { body.latitud = coords.lat; body.longitud = coords.lng; }
+      if (latitud && longitud) { body.latitud = Number(latitud); body.longitud = Number(longitud); }
 
       const res = await fetch('/api/danos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       if (!res.ok) { const d = await res.json(); throw new Error(d.error ?? 'Error al enviar'); }
@@ -162,8 +163,7 @@ export function AgregarDanoModal({ onClose, onSuccess }: Props) {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Ubicación GPS (recomendado)</label>
-            <LocationCapture onCapture={c => setCoords(c)} onClear={() => setCoords(null)} />
+            <LocationCapture latitud={latitud} longitud={longitud} onCapture={(lat, lng) => { setLatitud(lat); setLongitud(lng); }} />
           </div>
 
           {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
