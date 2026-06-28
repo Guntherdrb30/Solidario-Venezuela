@@ -1,5 +1,6 @@
 import { getSql } from '@/lib/db';
 import { sanitize, isValidPhone } from '@/lib/validations';
+import { logAudit } from '@/lib/audit';
 
 const HABILIDADES_VALIDAS = [
   'Médico / Enfermero', 'Rescatista / Primeros auxilios', 'Logística y transporte',
@@ -72,5 +73,6 @@ export async function POST(request: Request) {
     VALUES (${nombre}, ${habilidad}, ${estado}, ${ciudad}, ${telefono}, ${sanitize(body.disponibilidad)})
     RETURNING *
   `;
+  await logAudit(request, 'crear_voluntario', 'voluntarios', rows[0].id);
   return Response.json(rows[0], { status: 201 });
 }

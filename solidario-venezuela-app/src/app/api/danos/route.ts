@@ -1,5 +1,6 @@
 import { getSql } from '@/lib/db';
 import { sanitize, isValidPhone } from '@/lib/validations';
+import { logAudit } from '@/lib/audit';
 
 const TIPOS_VALIDOS = ['vivienda', 'edificio', 'escuela', 'hospital', 'comercio', 'puente', 'infraestructura', 'otro'];
 const SEVERIDADES_VALIDAS = ['leve', 'moderado', 'grave', 'colapso'];
@@ -76,5 +77,6 @@ export async function POST(request: Request) {
     VALUES (${tipo_inmueble}, ${severidad}, ${estado}, ${ciudad}, ${direccion}, ${sanitize(body.descripcion)}, ${sanitize(body.foto_url)}, ${personas_afectadas}, ${sanitize(body.contacto_nombre)}, ${contacto_telefono}, ${latitud}, ${longitud})
     RETURNING *
   `;
+  await logAudit(request, 'crear_dano', 'danos_estructurales', rows[0].id);
   return Response.json(rows[0], { status: 201 });
 }

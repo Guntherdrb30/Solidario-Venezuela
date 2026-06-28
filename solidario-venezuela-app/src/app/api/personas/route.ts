@@ -1,5 +1,6 @@
 import { getSql } from '@/lib/db';
 import { sanitize, isValidCedula, isValidPhone, isValidEmail } from '@/lib/validations';
+import { logAudit } from '@/lib/audit';
 
 const PAGE_SIZE = 24;
 
@@ -77,5 +78,6 @@ export async function POST(request: Request) {
     VALUES (${nombre}, ${apellido}, ${cedula_tipo}, ${cedula_numero}, ${sanitize(body.fecha_nacimiento)}, ${sanitize(body.genero)}, ${estado}, ${ciudad}, ${telefono}, ${email}, ${sanitize(body.foto_url)}, ${sanitize(body.ultima_vez_fecha)}, ${sanitize(body.ultima_vez_lugar)}, ${sanitize(body.descripcion)}, ${sanitize(body.estado_busqueda) ?? 'buscando'}, ${latitud}, ${longitud})
     RETURNING *
   `;
+  await logAudit(request, 'crear_persona', 'personas', rows[0].id);
   return Response.json(rows[0], { status: 201 });
 }

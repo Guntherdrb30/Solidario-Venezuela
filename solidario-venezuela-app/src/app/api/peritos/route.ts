@@ -1,5 +1,6 @@
 import { getSql } from '@/lib/db';
 import { sanitize, isValidPhone, isValidEmail } from '@/lib/validations';
+import { logAudit } from '@/lib/audit';
 
 const PROFESIONES_VALIDAS = ['Ingeniero Civil', 'Arquitecto', 'Técnico en Construcción', 'Ingeniero Estructural', 'Inspector de Obra', 'Otro'];
 const PAGE_SIZE = 24;
@@ -72,5 +73,6 @@ export async function POST(request: Request) {
     VALUES (${nombre}, ${profesion}, ${sanitize(body.numero_colegiado)}, ${estado}, ${ciudad}, ${telefono}, ${email})
     RETURNING *
   `;
+  await logAudit(request, 'crear_perito', 'peritos', rows[0].id);
   return Response.json(rows[0], { status: 201 });
 }

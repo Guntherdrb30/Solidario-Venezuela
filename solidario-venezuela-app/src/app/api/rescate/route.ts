@@ -1,5 +1,6 @@
 import { getSql } from '@/lib/db';
 import { sanitize, isValidPhone } from '@/lib/validations';
+import { logAudit } from '@/lib/audit';
 
 const TIPOS_VALIDOS = ['personas_atrapadas', 'heridos', 'incendio', 'derrumbe', 'fuga_gas', 'otro'];
 const PAGE_SIZE = 24;
@@ -72,5 +73,6 @@ export async function POST(request: Request) {
     VALUES (${tipo_emergencia}, ${estado}, ${ciudad}, ${direccion}, ${descripcion}, ${personas_involucradas}, ${sanitize(body.contacto_nombre)}, ${contacto_telefono}, ${latitud}, ${longitud})
     RETURNING *
   `;
+  await logAudit(request, 'crear_rescate', 'solicitudes_rescate', rows[0].id);
   return Response.json(rows[0], { status: 201 });
 }

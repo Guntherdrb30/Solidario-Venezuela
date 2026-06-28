@@ -1,6 +1,16 @@
 'use client';
 import { useState, useEffect } from 'react';
 
+interface AuditLog {
+  id: number;
+  accion: string;
+  tabla: string;
+  record_id: number | null;
+  ip: string;
+  user_agent: string;
+  created_at: string;
+}
+
 interface Aviso {
   id: number;
   titulo: string;
@@ -21,6 +31,8 @@ export default function AdminPage() {
   const [auth, setAuth] = useState(false);
   const [authError, setAuthError] = useState('');
   const [avisos, setAvisos] = useState<Aviso[]>([]);
+  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [activeSection, setActiveSection] = useState<'avisos' | 'logs'>('avisos');
   const [form, setForm] = useState({ titulo: '', contenido: '', tipo: 'urgente' });
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState('');
@@ -40,7 +52,18 @@ export default function AdminPage() {
     setAvisos(await r.json() as Aviso[]);
   };
 
-  useEffect(() => { if (auth) loadAvisos(); }, [auth]);
+  const loadLogs = async () => {
+    const r = await fetch(`/api/admin/logs?secret=${encodeURIComponent(secret)}`);
+    if (r.ok) setLogs(await r.json() as AuditLog[]);
+  };
+
+  useEffect(() => {
+    if (auth) {
+      loadAvisos();
+      loadLogs();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth]);
 
   const publicar = async () => {
     if (!form.titulo || !form.contenido) { setMsg('Completa todos los campos.'); return; }
@@ -87,9 +110,22 @@ export default function AdminPage() {
       <div className="bg-[#17221c] py-8 px-5 text-center">
         <h1 className="text-2xl font-bold text-white">🔐 Panel de administración</h1>
         <p className="text-[#a8c4b0] text-sm mt-1">Solidario Venezuela</p>
+        <div className="mt-4 inline-flex gap-1 rounded-lg bg-white/10 p-1">
+          <button onClick={() => setActiveSection('avisos')}
+            className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${activeSection === 'avisos' ? 'bg-white text-gray-900' : 'text-white hover:bg-white/10'}`}>
+            📢 Avisos
+          </button>
+          <button onClick={() => setActiveSection('logs')}
+            className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${activeSection === 'logs' ? 'bg-white text-gray-900' : 'text-white hover:bg-white/10'}`}>
+            🔍 Registro de actividad
+          </button>
+        </div>
       </div>
 
       <div className="mx-auto max-w-3xl px-5 py-8 space-y-8">
+
+        {/* Sección: avisos */}
+        {activeSection === 'avisos' && <>
 
         {/* Publicar aviso */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
@@ -154,6 +190,56 @@ export default function AdminPage() {
             </div>
           )}
         </div>
+
+        </>}
+
+        {/* Sección: logs de auditoría */}
+        {activeSection === 'logs' && (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-bold text-gray-900">🔍 Registro de actividad ({logs.length})</h2>
+              <button onClick={loadLogs} className="text-xs text-[#1f7a4d] hover:underline">Actualizar</button>
+            </div>
+            <p className="text-xs text-gray-400 mb-4">IP, dispositivo y hora de cada acción de registro en la plataforma. Las denuncias anónimas no se registran.</p>
+            {logs.length === 0 ? (
+              <p className="text-sm text-gray-400">No hay registros aún.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-gray-100 text-left text-gray-500">
+                      <th className="pb-2 pr-3 font-medium">Fecha / Hora</th>
+                      <th className="pb-2 pr-3 font-medium">Acción</th>
+                      <th className="pb-2 pr-3 font-medium">Registro #</th>
+                      <th className="pb-2 pr-3 font-medium">IP</th>
+                      <th className="pb-2 font-medium">Dispositivo</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {logs.map(log => (
+                      <tr key={log.id} className="hover:bg-gray-50">
+                        <td className="py-2 pr-3 text-gray-500 whitespace-nowrap">
+                          {new Date(log.created_at).toLocaleDateString('es-VE')} {new Date(log.created_at).toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' })}
+                        </td>
+                        <td className="py-2 pr-3">
+                          <span className="rounded-full bg-green-50 text-green-700 px-2 py-0.5 font-medium">{log.accion}</span>
+                        </td>
+                        <td className="py-2 pr-3 text-gray-600">
+                          {log.tabla} #{log.record_id ?? '—'}
+                        </td>
+                        <td className="py-2 pr-3 font-mono text-gray-700">{log.ip}</td>
+                        <td className="py-2 text-gray-400 max-w-[200px] truncate" title={log.user_agent}>
+                          {log.user_agent.replace(/\(.*?\)/g, '').slice(0, 60)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
       </div>
     </main>
   );

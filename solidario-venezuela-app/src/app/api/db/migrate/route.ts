@@ -152,5 +152,17 @@ export async function POST() {
     )
   `;
 
+  await sql`
+    CREATE TABLE IF NOT EXISTS audit_logs (
+      id SERIAL PRIMARY KEY,
+      accion VARCHAR(100) NOT NULL,
+      tabla VARCHAR(50) NOT NULL,
+      record_id INTEGER,
+      ip VARCHAR(100),
+      user_agent TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+
   return Response.json({ ok: true, message: 'Tablas creadas correctamente' });
 }

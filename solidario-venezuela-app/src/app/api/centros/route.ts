@@ -1,5 +1,6 @@
 import { getSql } from '@/lib/db';
 import { sanitize, isValidPhone, isValidEmail } from '@/lib/validations';
+import { logAudit } from '@/lib/audit';
 
 const PAGE_SIZE = 24;
 
@@ -70,5 +71,6 @@ export async function POST(request: Request) {
     VALUES (${nombre}, ${sanitize(body.tipo)}, ${estado}, ${ciudad}, ${sanitize(body.direccion)}, ${telefono}, ${email}, ${sanitize(body.horario)}, ${sanitize(body.descripcion)}, ${sanitize(body.necesidades)}, ${sanitize(body.disponible)}, ${latitud}, ${longitud})
     RETURNING *
   `;
+  await logAudit(request, 'crear_centro', 'centros_ayuda', rows[0].id);
   return Response.json(rows[0], { status: 201 });
 }
