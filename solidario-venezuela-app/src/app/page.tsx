@@ -5,12 +5,18 @@ import { PersonaCard } from '@/components/PersonaCard';
 import { CentroCard } from '@/components/CentroCard';
 import { DenunciaCard } from '@/components/DenunciaCard';
 import { VoluntarioCard } from '@/components/VoluntarioCard';
+import { RescateCard } from '@/components/RescateCard';
+import { DanoCard } from '@/components/DanoCard';
+import { PeritoCard } from '@/components/PeritoCard';
 import { StatsBar } from '@/components/StatsBar';
 import { AvisoBanner } from '@/components/AvisoBanner';
 import { AgregarPersonaModal } from '@/components/AgregarPersonaModal';
 import { AgregarCentroModal } from '@/components/AgregarCentroModal';
 import { AgregarDenunciaModal } from '@/components/AgregarDenunciaModal';
 import { AgregarVoluntarioModal } from '@/components/AgregarVoluntarioModal';
+import { AgregarRescateModal } from '@/components/AgregarRescateModal';
+import { AgregarDanoModal } from '@/components/AgregarDanoModal';
+import { AgregarPeritoModal } from '@/components/AgregarPeritoModal';
 import { ESTADOS_VENEZUELA } from '@/lib/venezuela-data';
 
 async function shareApp() {
@@ -24,12 +30,15 @@ async function shareApp() {
   }
 }
 
-type Tab = 'personas' | 'centros' | 'denuncias' | 'voluntarios';
+type Tab = 'personas' | 'centros' | 'voluntarios' | 'denuncias' | 'rescate' | 'danos' | 'peritos';
 
 const TABS: { value: Tab; label: string; icon: string }[] = [
   { value: 'personas',    label: 'Personas',         icon: '👤' },
   { value: 'centros',     label: 'Centros de Ayuda', icon: '🏠' },
   { value: 'voluntarios', label: 'Voluntarios',      icon: '🙋' },
+  { value: 'rescate',     label: 'Rescate',          icon: '🆘' },
+  { value: 'danos',       label: 'Daños',            icon: '🏚️' },
+  { value: 'peritos',     label: 'Peritos',          icon: '👷' },
   { value: 'denuncias',   label: 'Denuncias',        icon: '🚨' },
 ];
 
@@ -38,6 +47,9 @@ const ENDPOINTS: Record<Tab, string> = {
   centros:     '/api/centros',
   denuncias:   '/api/denuncias',
   voluntarios: '/api/voluntarios',
+  rescate:     '/api/rescate',
+  danos:       '/api/danos',
+  peritos:     '/api/peritos',
 };
 
 const EMPTY_LABELS: Record<Tab, string> = {
@@ -45,6 +57,9 @@ const EMPTY_LABELS: Record<Tab, string> = {
   centros:     'No hay centros de ayuda registrados aún',
   denuncias:   'No hay denuncias registradas aún',
   voluntarios: 'No hay voluntarios registrados aún',
+  rescate:     'No hay solicitudes de rescate activas',
+  danos:       'No hay reportes de daños estructurales',
+  peritos:     'No hay peritos voluntarios registrados aún',
 };
 
 export default function Home() {
@@ -57,6 +72,9 @@ export default function Home() {
   const [showAddCentro, setShowAddCentro] = useState(false);
   const [showAddDenuncia, setShowAddDenuncia] = useState(false);
   const [showAddVoluntario, setShowAddVoluntario] = useState(false);
+  const [showAddRescate, setShowAddRescate] = useState(false);
+  const [showAddDano, setShowAddDano] = useState(false);
+  const [showAddPerito, setShowAddPerito] = useState(false);
 
   const fetchResults = useCallback(async (q: string, currentTab: Tab, est: string) => {
     setLoading(true);
@@ -121,7 +139,7 @@ export default function Home() {
       <div className="mx-auto max-w-6xl px-5 py-8">
 
         {/* Tabs + acciones */}
-        <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="inline-flex flex-wrap gap-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
             {TABS.map(t => (
               <button key={t.value} type="button" onClick={() => handleTabChange(t.value)}
@@ -129,6 +147,12 @@ export default function Home() {
                   tab === t.value
                     ? t.value === 'denuncias'
                       ? 'bg-red-600 text-white shadow-sm'
+                      : t.value === 'rescate'
+                      ? 'bg-red-700 text-white shadow-sm'
+                      : t.value === 'danos'
+                      ? 'bg-orange-600 text-white shadow-sm'
+                      : t.value === 'peritos'
+                      ? 'bg-blue-600 text-white shadow-sm'
                       : 'bg-[#1f7a4d] text-white shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}>
@@ -137,7 +161,7 @@ export default function Home() {
             ))}
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             {tab === 'personas' && (
               <button onClick={() => setShowAddPersona(true)}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-[#1f7a4d] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#17663f] transition-colors shadow-sm">
@@ -162,6 +186,24 @@ export default function Home() {
                 🚨 Hacer denuncia anónima
               </button>
             )}
+            {tab === 'rescate' && (
+              <button onClick={() => setShowAddRescate(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-red-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-800 transition-colors shadow-sm">
+                🆘 Pedir rescate
+              </button>
+            )}
+            {tab === 'danos' && (
+              <button onClick={() => setShowAddDano(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-700 transition-colors shadow-sm">
+                🏚️ Reportar daño
+              </button>
+            )}
+            {tab === 'peritos' && (
+              <button onClick={() => setShowAddPerito(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors shadow-sm">
+                👷 Ofrecer peritaje
+              </button>
+            )}
           </div>
         </div>
 
@@ -182,7 +224,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* Aviso privacidad denuncias */}
+        {/* Avisos contextuales por tab */}
         {tab === 'denuncias' && (
           <div className="mb-5 flex items-start gap-3 rounded-xl bg-red-50 border border-red-200 px-4 py-3">
             <span className="text-red-500 text-xl shrink-0">🔒</span>
@@ -194,15 +236,46 @@ export default function Home() {
             </div>
           </div>
         )}
-
-        {/* Aviso voluntarios */}
         {tab === 'voluntarios' && (
           <div className="mb-5 flex items-start gap-3 rounded-xl bg-[#eef6f1] border border-[#1f7a4d]/20 px-4 py-3">
             <span className="text-2xl shrink-0">🙋</span>
             <div>
               <p className="text-sm font-semibold text-[#17221c]">¿Puedes ayudar?</p>
               <p className="text-xs text-[#526058] mt-0.5">
-                Regístrate como voluntario para conectarte con centros y familias que necesitan apoyo. Tu número de teléfono es opcional.
+                Regístrate como voluntario para conectarte con centros y familias que necesitan apoyo.
+              </p>
+            </div>
+          </div>
+        )}
+        {tab === 'rescate' && (
+          <div className="mb-5 flex items-start gap-3 rounded-xl bg-red-50 border border-red-200 px-4 py-3">
+            <span className="text-2xl shrink-0">🆘</span>
+            <div>
+              <p className="text-sm font-semibold text-red-800">Solicitudes de rescate activas</p>
+              <p className="text-xs text-red-600 mt-0.5">
+                Para emergencias con riesgo de vida también llama al <strong>911</strong>. Estas solicitudes son visibles para brigadas y voluntarios de rescate.
+              </p>
+            </div>
+          </div>
+        )}
+        {tab === 'danos' && (
+          <div className="mb-5 flex items-start gap-3 rounded-xl bg-orange-50 border border-orange-200 px-4 py-3">
+            <span className="text-2xl shrink-0">🏚️</span>
+            <div>
+              <p className="text-sm font-semibold text-orange-800">Reportes de daños estructurales</p>
+              <p className="text-xs text-orange-700 mt-0.5">
+                Peritos e ingenieros voluntarios pueden ver estos reportes y contactar a los afectados para ofrecer evaluación gratuita.
+              </p>
+            </div>
+          </div>
+        )}
+        {tab === 'peritos' && (
+          <div className="mb-5 flex items-start gap-3 rounded-xl bg-blue-50 border border-blue-200 px-4 py-3">
+            <span className="text-2xl shrink-0">👷</span>
+            <div>
+              <p className="text-sm font-semibold text-blue-800">Peritos e ingenieros voluntarios</p>
+              <p className="text-xs text-blue-700 mt-0.5">
+                Profesionales del área que ofrecen peritaje gratuito a los afectados por el terremoto. ¿Eres ingeniero o arquitecto? ¡Regístrate!
               </p>
             </div>
           </div>
@@ -225,6 +298,12 @@ export default function Home() {
                 ? 'Usa el botón de arriba para registrar una denuncia anónima'
                 : tab === 'voluntarios'
                 ? 'Usa el botón para registrarte como voluntario'
+                : tab === 'rescate'
+                ? 'Usa el botón para enviar una solicitud de rescate'
+                : tab === 'danos'
+                ? 'Usa el botón para reportar un daño estructural'
+                : tab === 'peritos'
+                ? 'Usa el botón para registrarte como perito voluntario'
                 : 'Usa los botones de arriba para agregar el primero'}
             </p>
           </div>
@@ -246,15 +325,27 @@ export default function Home() {
               {tab === 'voluntarios' &&
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (results as any[]).map(v => <VoluntarioCard key={v.id} voluntario={v} />)}
+              {tab === 'rescate' &&
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (results as any[]).map(r => <RescateCard key={r.id} rescate={r} />)}
+              {tab === 'danos' &&
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (results as any[]).map(d => <DanoCard key={d.id} dano={d} />)}
+              {tab === 'peritos' &&
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (results as any[]).map(p => <PeritoCard key={p.id} perito={p} />)}
             </div>
           </>
         )}
       </div>
 
-      <AgregarPersonaModal open={showAddPersona} onClose={() => setShowAddPersona(false)} onSuccess={() => fetchResults(query, tab, estado)} />
-      <AgregarCentroModal open={showAddCentro} onClose={() => setShowAddCentro(false)} onSuccess={() => fetchResults(query, tab, estado)} />
-      <AgregarDenunciaModal open={showAddDenuncia} onClose={() => setShowAddDenuncia(false)} onSuccess={() => fetchResults(query, tab, estado)} />
-      <AgregarVoluntarioModal open={showAddVoluntario} onClose={() => setShowAddVoluntario(false)} onSuccess={() => fetchResults(query, tab, estado)} />
+      {showAddPersona && <AgregarPersonaModal open={showAddPersona} onClose={() => setShowAddPersona(false)} onSuccess={() => fetchResults(query, tab, estado)} />}
+      {showAddCentro && <AgregarCentroModal open={showAddCentro} onClose={() => setShowAddCentro(false)} onSuccess={() => fetchResults(query, tab, estado)} />}
+      {showAddDenuncia && <AgregarDenunciaModal open={showAddDenuncia} onClose={() => setShowAddDenuncia(false)} onSuccess={() => fetchResults(query, tab, estado)} />}
+      {showAddVoluntario && <AgregarVoluntarioModal open={showAddVoluntario} onClose={() => setShowAddVoluntario(false)} onSuccess={() => fetchResults(query, tab, estado)} />}
+      {showAddRescate && <AgregarRescateModal onClose={() => setShowAddRescate(false)} onSuccess={() => fetchResults(query, tab, estado)} />}
+      {showAddDano && <AgregarDanoModal onClose={() => setShowAddDano(false)} onSuccess={() => fetchResults(query, tab, estado)} />}
+      {showAddPerito && <AgregarPeritoModal onClose={() => setShowAddPerito(false)} onSuccess={() => fetchResults(query, tab, estado)} />}
     </main>
   );
 }

@@ -100,5 +100,57 @@ export async function POST() {
   await sql`ALTER TABLE centros_ayuda ADD COLUMN IF NOT EXISTS latitud DOUBLE PRECISION`;
   await sql`ALTER TABLE centros_ayuda ADD COLUMN IF NOT EXISTS longitud DOUBLE PRECISION`;
 
+  await sql`
+    CREATE TABLE IF NOT EXISTS solicitudes_rescate (
+      id SERIAL PRIMARY KEY,
+      tipo_emergencia VARCHAR(50) NOT NULL,
+      estado VARCHAR(50) NOT NULL,
+      ciudad VARCHAR(100) NOT NULL,
+      direccion TEXT NOT NULL,
+      descripcion TEXT NOT NULL,
+      personas_involucradas INTEGER,
+      contacto_nombre VARCHAR(100),
+      contacto_telefono VARCHAR(20),
+      latitud DOUBLE PRECISION,
+      longitud DOUBLE PRECISION,
+      estado_solicitud VARCHAR(20) DEFAULT 'activa',
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS danos_estructurales (
+      id SERIAL PRIMARY KEY,
+      tipo_inmueble VARCHAR(50) NOT NULL,
+      severidad VARCHAR(20) NOT NULL,
+      estado VARCHAR(50) NOT NULL,
+      ciudad VARCHAR(100) NOT NULL,
+      direccion TEXT NOT NULL,
+      descripcion TEXT,
+      foto_url TEXT,
+      personas_afectadas INTEGER,
+      contacto_nombre VARCHAR(100),
+      contacto_telefono VARCHAR(20),
+      latitud DOUBLE PRECISION,
+      longitud DOUBLE PRECISION,
+      estado_peritaje VARCHAR(20) DEFAULT 'pendiente',
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS peritos (
+      id SERIAL PRIMARY KEY,
+      nombre VARCHAR(150) NOT NULL,
+      profesion VARCHAR(100) NOT NULL,
+      numero_colegiado VARCHAR(50),
+      estado VARCHAR(50) NOT NULL,
+      ciudad VARCHAR(100) NOT NULL,
+      telefono VARCHAR(20),
+      email VARCHAR(200),
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+
   return Response.json({ ok: true, message: 'Tablas creadas correctamente' });
 }
