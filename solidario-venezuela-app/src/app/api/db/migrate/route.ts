@@ -192,6 +192,10 @@ export async function POST() {
     )
   `;
 
+  await sql`ALTER TABLE organizaciones ADD COLUMN IF NOT EXISTS latitud DOUBLE PRECISION`;
+  await sql`ALTER TABLE organizaciones ADD COLUMN IF NOT EXISTS longitud DOUBLE PRECISION`;
+  await sql`ALTER TABLE organizaciones ADD COLUMN IF NOT EXISTS direccion TEXT`;
+
   await sql`
     CREATE TABLE IF NOT EXISTS api_tokens (
       id SERIAL PRIMARY KEY,

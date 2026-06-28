@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { VenezuelaSelects } from './VenezuelaSelects';
+import { LocationCapture } from './LocationCapture';
 
 const TIPOS = [
   { value: 'ong',               label: 'ONG',                icon: '🤝' },
@@ -30,7 +31,10 @@ export function AgregarOrganizacionModal({ onClose, onSuccess }: Props) {
   const [paisSede, setPaisSede] = useState('Venezuela');
   const [estado, setEstado] = useState('');
   const [ciudad, setCiudad] = useState('');
+  const [direccion, setDireccion] = useState('');
   const [rif, setRif] = useState('');
+  const [latitud, setLatitud] = useState('');
+  const [longitud, setLongitud] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [ok, setOk] = useState(false);
@@ -59,7 +63,9 @@ export function AgregarOrganizacionModal({ onClose, onSuccess }: Props) {
       if (website.trim()) body.website = website.trim();
       if (estado) body.estado = estado;
       if (ciudad) body.ciudad = ciudad;
+      if (direccion.trim()) body.direccion = direccion.trim();
       if (rif.trim()) body.rif = rif.trim();
+      if (latitud && longitud) { body.latitud = parseFloat(latitud); body.longitud = parseFloat(longitud); }
 
       const res = await fetch('/api/organizaciones', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       if (!res.ok) { const d = await res.json(); throw new Error(d.error ?? 'Error'); }
@@ -76,7 +82,7 @@ export function AgregarOrganizacionModal({ onClose, onSuccess }: Props) {
       <div className="bg-white rounded-2xl p-8 max-w-sm w-full text-center shadow-xl">
         <div className="text-5xl mb-4">🏛️</div>
         <h2 className="text-xl font-bold text-gray-900 mb-2">¡Organización registrada!</h2>
-        <p className="text-gray-600 text-sm mb-2">Tu organización ya es visible en el directorio.</p>
+        <p className="text-gray-600 text-sm mb-2">Ya es visible en el directorio para donantes en Venezuela y el exterior.</p>
         <p className="text-gray-500 text-xs mb-6">El equipo de Solidario Venezuela puede verificarla para que aparezca con el sello ✅ de confianza.</p>
         <button onClick={() => { onSuccess(); onClose(); }} className="w-full rounded-xl bg-[#1f7a4d] py-3 font-semibold text-white hover:bg-[#17663f]">Cerrar</button>
       </div>
@@ -93,7 +99,7 @@ export function AgregarOrganizacionModal({ onClose, onSuccess }: Props) {
 
         <form onSubmit={submit} className="p-5 space-y-5">
           <div className="rounded-lg bg-[#eef6f1] border border-[#1f7a4d]/20 p-3 text-sm text-[#1f7a4d]">
-            Registra tu organización para que donantes en Venezuela y en el exterior puedan encontrarte y coordinar la entrega de recursos. Las organizaciones verificadas aparecen destacadas.
+            Registra tu organización para que donantes en Venezuela y el exterior puedan encontrarte por GPS y coordinar la entrega de recursos. Las organizaciones verificadas aparecen destacadas.
           </div>
 
           <div>
@@ -142,6 +148,28 @@ export function AgregarOrganizacionModal({ onClose, onSuccess }: Props) {
           </div>
 
           <VenezuelaSelects estado={estado} onEstadoChange={setEstado} ciudad={ciudad} onCiudadChange={setCiudad} />
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Dirección física</label>
+            <input value={direccion} onChange={e => setDireccion(e.target.value)}
+              placeholder="Ej: Av. Principal de La Castellana, Edificio Centro, PB"
+              className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:border-[#1f7a4d] focus:outline-none" />
+            <p className="text-xs text-gray-400 mt-1">Los donantes usarán esta dirección para llegar hasta tu organización.</p>
+          </div>
+
+          {/* GPS */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">📍 Ubicación GPS</label>
+            <div className="rounded-xl bg-blue-50 border border-blue-200 p-3 mb-2">
+              <p className="text-xs text-blue-700 font-medium mb-1">¿Por qué es importante?</p>
+              <p className="text-xs text-blue-600">Con las coordenadas GPS, los donantes podrán navegar directamente hasta tu organización usando Google Maps o Waze desde su teléfono.</p>
+            </div>
+            <LocationCapture
+              latitud={latitud}
+              longitud={longitud}
+              onCapture={(lat, lng) => { setLatitud(lat); setLongitud(lng); }}
+            />
+          </div>
 
           <div className="space-y-3">
             <p className="text-sm font-semibold text-gray-700">Datos de contacto</p>

@@ -65,9 +65,12 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Email inválido.' }, { status: 400 });
   }
 
+  const latitud = body.latitud != null ? parseFloat(String(body.latitud)) : null;
+  const longitud = body.longitud != null ? parseFloat(String(body.longitud)) : null;
+
   const rows = await sql`
-    INSERT INTO organizaciones (nombre, tipo, descripcion, areas, contacto_nombre, telefono, email, website, estado, ciudad, pais_sede, rif)
-    VALUES (${nombre}, ${tipo}, ${descripcion}, ${sanitize(body.areas)}, ${contacto_nombre}, ${sanitize(body.telefono)}, ${email}, ${sanitize(body.website)}, ${sanitize(body.estado)}, ${sanitize(body.ciudad)}, ${pais_sede}, ${sanitize(body.rif)})
+    INSERT INTO organizaciones (nombre, tipo, descripcion, areas, contacto_nombre, telefono, email, website, estado, ciudad, pais_sede, rif, direccion, latitud, longitud)
+    VALUES (${nombre}, ${tipo}, ${descripcion}, ${sanitize(body.areas)}, ${contacto_nombre}, ${sanitize(body.telefono)}, ${email}, ${sanitize(body.website)}, ${sanitize(body.estado)}, ${sanitize(body.ciudad)}, ${pais_sede}, ${sanitize(body.rif)}, ${sanitize(body.direccion)}, ${latitud}, ${longitud})
     RETURNING *
   `;
   await logAudit(request, 'crear_organizacion', 'organizaciones', rows[0].id);
