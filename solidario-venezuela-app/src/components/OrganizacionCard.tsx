@@ -1,3 +1,6 @@
+'use client';
+import { useState } from 'react';
+
 const TIPO_CONFIG: Record<string, { label: string; icon: string }> = {
   ong:               { label: 'ONG',                  icon: '🤝' },
   fundacion:         { label: 'Fundación',             icon: '🏛️' },
@@ -25,12 +28,65 @@ interface Organizacion {
   verificada: boolean;
   latitud?: number;
   longitud?: number;
+  avg_rating?: number;
+  count_valoraciones?: number;
+  count_donaciones?: number;
   created_at: string;
+}
+
+function StarDisplay({ rating, count }: { rating: number; count: number }) {
+  const filled = Math.round(rating);
+  return (
+    <div className="flex items-center gap-1">
+      {[1, 2, 3, 4, 5].map(s => (
+        <span key={s} className={`text-base ${s <= filled ? 'text-yellow-400' : 'text-gray-200'}`}>★</span>
+      ))}
+      <span className="text-xs text-gray-500 ml-1">
+        {rating > 0 ? rating.toFixed(1) : 'Sin valoraciones'}
+        {count > 0 ? ` (${count})` : ''}
+      </span>
+    </div>
+  );
+}
+
+function StarRating({ orgId, onDone }: { orgId: number; onDone: (stars: number) => void }) {
+  const [hover, setHover] = useState(0);
+  const [selected, setSelected] = useState(0);
+
+  const handleRate = async (stars: number) => {
+    setSelected(stars);
+    try {
+      await fetch('/api/organizaciones/valorar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ organizacion_id: orgId, estrellas: stars }),
+      });
+      onDone(stars);
+    } catch { /* silent */ }
+  };
+
+  return (
+    <div className="flex items-center gap-1 py-1">
+      {[1, 2, 3, 4, 5].map(s => (
+        <button key={s} type="button"
+          onMouseEnter={() => setHover(s)}
+          onMouseLeave={() => setHover(0)}
+          onClick={() => handleRate(s)}
+          className={`text-2xl transition-colors ${s <= (hover || selected) ? 'text-yellow-400' : 'text-gray-200'} hover:scale-110`}>
+          ★
+        </button>
+      ))}
+    </div>
+  );
 }
 
 export function OrganizacionCard({ org }: { org: Organizacion }) {
   const tipo = TIPO_CONFIG[org.tipo] ?? TIPO_CONFIG.otro;
   const areas = org.areas ? org.areas.split(',').map(a => a.trim()).filter(Boolean) : [];
+  const [showRating, setShowRating] = useState(false);
+  const [rated, setRated] = useState(false);
+  const [localRating, setLocalRating] = useState(org.avg_rating ?? 0);
+  const [localCount, setLocalCount] = useState(org.count_valoraciones ?? 0);
 
   const mapsUrl = org.latitud && org.longitud
     ? `https://www.google.com/maps?q=${org.latitud},${org.longitud}`
@@ -40,12 +96,22 @@ export function OrganizacionCard({ org }: { org: Organizacion }) {
 
   const shareWA = (e: React.MouseEvent) => {
     e.preventDefault();
-    const text = `*Solidario Venezuela — Organización receptora*\n${tipo.icon} *${org.nombre}*\n${tipo.label}${org.verificada ? ' ✅ Verificada' : ''}\n📍 ${org.ciudad ? `${org.ciudad}, ` : ''}${org.pais_sede}${org.direccion ? `\n🏠 ${org.direccion}` : ''}${mapsUrl ? `\n🗺️ GPS: ${mapsUrl}` : ''}${org.telefono ? `\n📞 ${org.telefono}` : ''}${org.email ? `\n✉️ ${org.email}` : ''}`;
+    const estrellas = localRating > 0 ? ` ⭐${localRating.toFixed(1)}` : '';
+    const text = `*Solidario Venezuela — Organización receptora*\n${tipo.icon} *${org.nombre}*${estrellas}\n${tipo.label}${org.verificada ? ' ✅ Verificada' : ''}\n📍 ${org.ciudad ? `${org.ciudad}, ` : ''}${org.pais_sede}${org.direccion ? `\n🏠 ${org.direccion}` : ''}${mapsUrl ? `\n🗺️ GPS: ${mapsUrl}` : ''}${org.telefono ? `\n📞 ${org.telefono}` : ''}${org.email ? `\n✉️ ${org.email}` : ''}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
+  const handleRated = (stars: number) => {
+    const newCount = localCount + 1;
+    setLocalRating(parseFloat(((localRating * localCount + stars) / newCount).toFixed(1)));
+    setLocalCount(newCount);
+    setRated(true);
+    setShowRating(false);
+  };
+
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
+    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col">
+      {/* Header */}
       <div className="flex items-start gap-3 mb-3">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#eef6f1] text-2xl">
           {tipo.icon}
@@ -66,6 +132,34 @@ export function OrganizacionCard({ org }: { org: Organizacion }) {
         </div>
       </div>
 
+      {/* Rating display */}
+      <div className="mb-3">
+        <StarDisplay rating={localRating} count={localCount} />
+        {!rated && !showRating && (
+          <button onClick={() => setShowRating(true)}
+            className="mt-1 text-xs text-[#1f7a4d] underline hover:text-[#17663f]">
+            Calificar esta organización
+          </button>
+        )}
+        {showRating && !rated && (
+          <div className="mt-1">
+            <p className="text-xs text-gray-500 mb-1">Selecciona tu valoración:</p>
+            <StarRating orgId={org.id} onDone={handleRated} />
+          </div>
+        )}
+        {rated && <p className="mt-1 text-xs text-green-600 font-medium">✅ ¡Gracias por tu valoración!</p>}
+      </div>
+
+      {/* Donaciones activas */}
+      {(org.count_donaciones ?? 0) > 0 && (
+        <div className="mb-3 rounded-lg bg-[#eef6f1] border border-[#1f7a4d]/20 px-3 py-2 flex items-center gap-2">
+          <span className="text-base">💰</span>
+          <p className="text-xs text-[#1f7a4d] font-semibold">
+            {org.count_donaciones} donación{(org.count_donaciones ?? 0) !== 1 ? 'es' : ''} asignada{(org.count_donaciones ?? 0) !== 1 ? 's' : ''}
+          </p>
+        </div>
+      )}
+
       <p className="text-sm text-gray-700 leading-relaxed line-clamp-3 mb-3">{org.descripcion}</p>
 
       {areas.length > 0 && (
@@ -76,11 +170,10 @@ export function OrganizacionCard({ org }: { org: Organizacion }) {
         </div>
       )}
 
+      {/* Dirección + mapa */}
       {(org.direccion || org.latitud) && (
         <div className="mb-3 rounded-lg bg-blue-50 border border-blue-100 px-3 py-2">
-          {org.direccion && (
-            <p className="text-xs text-blue-700 mb-1">🏠 {org.direccion}</p>
-          )}
+          {org.direccion && <p className="text-xs text-blue-700 mb-1">🏠 {org.direccion}</p>}
           {mapsUrl && (
             <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 hover:text-blue-900">
@@ -96,7 +189,8 @@ export function OrganizacionCard({ org }: { org: Organizacion }) {
 
       <p className="text-xs text-gray-500 mb-3">Contacto: <span className="font-medium text-gray-700">{org.contacto_nombre}</span></p>
 
-      <div className="flex items-center gap-2 flex-wrap">
+      {/* Acciones */}
+      <div className="mt-auto flex items-center gap-2 flex-wrap">
         {org.telefono && (
           <a href={`tel:${org.telefono}`}
             className="inline-flex items-center gap-1 rounded-lg bg-[#eef6f1] px-2.5 py-1.5 text-xs font-medium text-[#1f7a4d] hover:bg-[#d9ede3]">

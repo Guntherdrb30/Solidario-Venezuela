@@ -1,5 +1,5 @@
 import { getSql } from '@/lib/db';
-import { sanitize, isValidPhone, isValidEmail } from '@/lib/validations';
+import { sanitize, isValidEmail } from '@/lib/validations';
 import { logAudit } from '@/lib/audit';
 
 const TIPOS_VALIDOS = ['ong', 'fundacion', 'grupo_comunitario', 'empresa', 'iglesia', 'otro'];
@@ -18,23 +18,58 @@ export async function GET(request: Request) {
   if (q && estadoFilter) {
     const s = `%${q}%`;
     [rows, countRows] = await Promise.all([
-      sql`SELECT * FROM organizaciones WHERE (nombre ILIKE ${s} OR descripcion ILIKE ${s} OR areas ILIKE ${s}) AND estado = ${estadoFilter} ORDER BY verificada DESC, created_at DESC LIMIT ${PAGE_SIZE} OFFSET ${offset}`,
+      sql`
+        SELECT o.*,
+          COALESCE(ROUND(AVG(v.estrellas)::numeric,1),0)::float AS avg_rating,
+          COUNT(DISTINCT v.id)::int AS count_valoraciones,
+          COUNT(DISTINCT d.id)::int AS count_donaciones
+        FROM organizaciones o
+        LEFT JOIN organizacion_valoraciones v ON v.organizacion_id = o.id
+        LEFT JOIN donaciones d ON d.organizacion_id = o.id
+        WHERE (o.nombre ILIKE ${s} OR o.descripcion ILIKE ${s} OR o.areas ILIKE ${s}) AND o.estado = ${estadoFilter}
+        GROUP BY o.id ORDER BY o.verificada DESC, o.created_at DESC LIMIT ${PAGE_SIZE} OFFSET ${offset}`,
       sql`SELECT COUNT(*)::int AS total FROM organizaciones WHERE (nombre ILIKE ${s} OR descripcion ILIKE ${s} OR areas ILIKE ${s}) AND estado = ${estadoFilter}`,
     ]);
   } else if (q) {
     const s = `%${q}%`;
     [rows, countRows] = await Promise.all([
-      sql`SELECT * FROM organizaciones WHERE nombre ILIKE ${s} OR descripcion ILIKE ${s} OR areas ILIKE ${s} OR ciudad ILIKE ${s} ORDER BY verificada DESC, created_at DESC LIMIT ${PAGE_SIZE} OFFSET ${offset}`,
+      sql`
+        SELECT o.*,
+          COALESCE(ROUND(AVG(v.estrellas)::numeric,1),0)::float AS avg_rating,
+          COUNT(DISTINCT v.id)::int AS count_valoraciones,
+          COUNT(DISTINCT d.id)::int AS count_donaciones
+        FROM organizaciones o
+        LEFT JOIN organizacion_valoraciones v ON v.organizacion_id = o.id
+        LEFT JOIN donaciones d ON d.organizacion_id = o.id
+        WHERE o.nombre ILIKE ${s} OR o.descripcion ILIKE ${s} OR o.areas ILIKE ${s} OR o.ciudad ILIKE ${s}
+        GROUP BY o.id ORDER BY o.verificada DESC, o.created_at DESC LIMIT ${PAGE_SIZE} OFFSET ${offset}`,
       sql`SELECT COUNT(*)::int AS total FROM organizaciones WHERE nombre ILIKE ${s} OR descripcion ILIKE ${s} OR areas ILIKE ${s} OR ciudad ILIKE ${s}`,
     ]);
   } else if (estadoFilter) {
     [rows, countRows] = await Promise.all([
-      sql`SELECT * FROM organizaciones WHERE estado = ${estadoFilter} ORDER BY verificada DESC, created_at DESC LIMIT ${PAGE_SIZE} OFFSET ${offset}`,
+      sql`
+        SELECT o.*,
+          COALESCE(ROUND(AVG(v.estrellas)::numeric,1),0)::float AS avg_rating,
+          COUNT(DISTINCT v.id)::int AS count_valoraciones,
+          COUNT(DISTINCT d.id)::int AS count_donaciones
+        FROM organizaciones o
+        LEFT JOIN organizacion_valoraciones v ON v.organizacion_id = o.id
+        LEFT JOIN donaciones d ON d.organizacion_id = o.id
+        WHERE o.estado = ${estadoFilter}
+        GROUP BY o.id ORDER BY o.verificada DESC, o.created_at DESC LIMIT ${PAGE_SIZE} OFFSET ${offset}`,
       sql`SELECT COUNT(*)::int AS total FROM organizaciones WHERE estado = ${estadoFilter}`,
     ]);
   } else {
     [rows, countRows] = await Promise.all([
-      sql`SELECT * FROM organizaciones ORDER BY verificada DESC, created_at DESC LIMIT ${PAGE_SIZE} OFFSET ${offset}`,
+      sql`
+        SELECT o.*,
+          COALESCE(ROUND(AVG(v.estrellas)::numeric,1),0)::float AS avg_rating,
+          COUNT(DISTINCT v.id)::int AS count_valoraciones,
+          COUNT(DISTINCT d.id)::int AS count_donaciones
+        FROM organizaciones o
+        LEFT JOIN organizacion_valoraciones v ON v.organizacion_id = o.id
+        LEFT JOIN donaciones d ON d.organizacion_id = o.id
+        GROUP BY o.id ORDER BY o.verificada DESC, o.created_at DESC LIMIT ${PAGE_SIZE} OFFSET ${offset}`,
       sql`SELECT COUNT(*)::int AS total FROM organizaciones`,
     ]);
   }

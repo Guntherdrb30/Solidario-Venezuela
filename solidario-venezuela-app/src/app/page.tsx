@@ -24,6 +24,82 @@ import { AgregarOrganizacionModal } from '@/components/AgregarOrganizacionModal'
 import { Pagination } from '@/components/Pagination';
 import { ESTADOS_VENEZUELA } from '@/lib/venezuela-data';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function HeroResultRow({ item, tab }: { item: any; tab: Tab }) {
+  let title = '';
+  let sub = '';
+  let badge = '';
+  let badgeCls = 'bg-gray-100 text-gray-600';
+
+  switch (tab) {
+    case 'personas':
+      title = `${item.nombre ?? ''} ${item.apellido ?? ''}`.trim();
+      sub = [item.ciudad, item.estado].filter(Boolean).join(', ');
+      badge = item.estado_busqueda === 'encontrado' ? 'Encontrado' : item.estado_busqueda === 'buscando' ? 'Buscando' : (item.estado_busqueda ?? '');
+      badgeCls = item.estado_busqueda === 'encontrado' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700';
+      break;
+    case 'centros':
+      title = item.nombre ?? '';
+      sub = [item.tipo, item.ciudad, item.estado].filter(Boolean).join(' · ');
+      badge = item.disponible ?? '';
+      break;
+    case 'organizaciones':
+      title = item.nombre ?? '';
+      sub = [item.tipo, item.ciudad, item.pais_sede].filter(Boolean).join(' · ');
+      badge = item.verificada ? '✅ Verificada' : '';
+      badgeCls = 'bg-[#eef6f1] text-[#1f7a4d]';
+      break;
+    case 'donaciones':
+      title = item.donante_empresa ?? item.donante_nombre ?? '';
+      sub = [item.categoria, item.donante_pais].filter(Boolean).join(' · ');
+      badge = item.monto ? `${item.moneda ?? 'USD'} ${Number(item.monto).toLocaleString()}` : item.tipo ?? '';
+      badgeCls = 'bg-yellow-50 text-yellow-700';
+      break;
+    case 'voluntarios':
+      title = item.nombre ?? '';
+      sub = [item.habilidad, item.ciudad, item.estado].filter(Boolean).join(' · ');
+      break;
+    case 'rescate':
+      title = item.tipo_emergencia ?? '';
+      sub = [item.ciudad, item.estado].filter(Boolean).join(', ');
+      badge = item.estado_solicitud ?? '';
+      badgeCls = 'bg-red-100 text-red-700';
+      break;
+    case 'danos':
+      title = item.tipo_inmueble ?? '';
+      sub = [item.severidad, item.ciudad, item.estado].filter(Boolean).join(' · ');
+      badge = item.severidad ?? '';
+      badgeCls = 'bg-orange-100 text-orange-700';
+      break;
+    case 'peritos':
+      title = item.nombre ?? '';
+      sub = [item.profesion, item.ciudad, item.estado].filter(Boolean).join(' · ');
+      break;
+    case 'denuncias':
+      title = item.tipo ?? '';
+      sub = [item.ciudad, item.estado].filter(Boolean).join(', ');
+      badge = item.tipo ?? '';
+      badgeCls = 'bg-red-100 text-red-700';
+      break;
+  }
+
+  return (
+    <div className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
+      <span className="shrink-0 text-lg">{
+        { personas: '👤', centros: '🏠', organizaciones: '🏛️', donaciones: '💰', voluntarios: '🙋',
+          rescate: '🆘', danos: '🏚️', peritos: '👷', denuncias: '🚨' }[tab]
+      }</span>
+      <div className="min-w-0 flex-1 text-left">
+        <p className="truncate text-sm font-semibold text-gray-900">{title}</p>
+        {sub && <p className="truncate text-xs text-gray-400">{sub}</p>}
+      </div>
+      {badge && (
+        <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${badgeCls}`}>{badge}</span>
+      )}
+    </div>
+  );
+}
+
 async function shareApp() {
   const url = window.location.origin;
   const text = 'Solidario Venezuela — Encuentra personas desaparecidas y centros de ayuda tras el terremoto en Venezuela.';
@@ -166,10 +242,7 @@ export default function Home() {
           <div className="mb-5 flex flex-wrap justify-center gap-2">
             {TABS.map(t => (
               <button key={t.value} type="button"
-                onClick={() => {
-                  handleTabChange(t.value);
-                  document.getElementById('resultados')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }}
+                onClick={() => handleTabChange(t.value)}
                 className={`rounded-full border px-4 py-2 text-sm font-medium transition-all ${
                   tab === t.value
                     ? t.value === 'rescate' || t.value === 'denuncias'
@@ -192,6 +265,45 @@ export default function Home() {
             onChange={setQuery}
             placeholder={SEARCH_PLACEHOLDERS[tab]}
           />
+
+          {/* Panel de resultados en-línea (aparece mientras escribe) */}
+          {query.length >= 2 && (
+            <div className="relative w-full max-w-2xl mx-auto mt-2 z-20">
+              {loading ? (
+                <div className="rounded-2xl bg-white shadow-2xl px-5 py-4 text-sm text-gray-400 flex items-center gap-2">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#1f7a4d] border-t-transparent" />
+                  Buscando en {TABS.find(t => t.value === tab)?.label}...
+                </div>
+              ) : results.length > 0 ? (
+                <div className="rounded-2xl bg-white shadow-2xl overflow-hidden">
+                  <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50 px-4 py-2">
+                    <p className="text-xs font-semibold text-gray-500">
+                      {TABS.find(t => t.value === tab)?.icon}{' '}
+                      {results.length} resultado{results.length !== 1 ? 's' : ''} en {TABS.find(t => t.value === tab)?.label}
+                    </p>
+                    <button onClick={() => setQuery('')} className="text-xs text-gray-400 hover:text-gray-700">✕ Limpiar</button>
+                  </div>
+                  <div className="divide-y divide-gray-50 max-h-80 overflow-y-auto">
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                    {(results as any[]).slice(0, 8).map((r, i) => (
+                      <HeroResultRow key={r.id ?? i} item={r} tab={tab} />
+                    ))}
+                  </div>
+                  {results.length > 8 && (
+                    <button
+                      onClick={() => document.getElementById('resultados')?.scrollIntoView({ behavior: 'smooth' })}
+                      className="w-full py-3 text-xs font-semibold text-[#1f7a4d] hover:bg-[#eef6f1] transition-colors">
+                      Ver los {results.length} resultados ↓
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="rounded-2xl bg-white shadow-2xl px-5 py-4 text-sm text-gray-500 text-center">
+                  Sin resultados para &ldquo;{query}&rdquo; en {TABS.find(t => t.value === tab)?.label}
+                </div>
+              )}
+            </div>
+          )}
 
           <StatsBar />
           <div className="mt-5">

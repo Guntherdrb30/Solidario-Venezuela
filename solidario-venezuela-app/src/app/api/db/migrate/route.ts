@@ -197,6 +197,16 @@ export async function POST() {
   await sql`ALTER TABLE organizaciones ADD COLUMN IF NOT EXISTS direccion TEXT`;
 
   await sql`
+    CREATE TABLE IF NOT EXISTS organizacion_valoraciones (
+      id SERIAL PRIMARY KEY,
+      organizacion_id INTEGER NOT NULL,
+      estrellas INTEGER NOT NULL,
+      comentario TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+
+  await sql`
     CREATE TABLE IF NOT EXISTS api_tokens (
       id SERIAL PRIMARY KEY,
       nombre VARCHAR(200) NOT NULL,
