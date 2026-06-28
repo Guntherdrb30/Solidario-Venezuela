@@ -17,6 +17,7 @@ import { AgregarVoluntarioModal } from '@/components/AgregarVoluntarioModal';
 import { AgregarRescateModal } from '@/components/AgregarRescateModal';
 import { AgregarDanoModal } from '@/components/AgregarDanoModal';
 import { AgregarPeritoModal } from '@/components/AgregarPeritoModal';
+import { Pagination } from '@/components/Pagination';
 import { ESTADOS_VENEZUELA } from '@/lib/venezuela-data';
 
 async function shareApp() {
@@ -67,6 +68,8 @@ export default function Home() {
   const [query, setQuery] = useState('');
   const [estado, setEstado] = useState('');
   const [results, setResults] = useState<unknown[]>([]);
+  const [pagination, setPagination] = useState({ total: 0, page: 1, pages: 1 });
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [showAddPersona, setShowAddPersona] = useState(false);
   const [showAddCentro, setShowAddCentro] = useState(false);
@@ -76,15 +79,23 @@ export default function Home() {
   const [showAddDano, setShowAddDano] = useState(false);
   const [showAddPerito, setShowAddPerito] = useState(false);
 
-  const fetchResults = useCallback(async (q: string, currentTab: Tab, est: string) => {
+  const fetchResults = useCallback(async (q: string, currentTab: Tab, est: string, p = 1) => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (q) params.set('q', q);
       if (est && currentTab !== 'denuncias') params.set('estado', est);
+      if (p > 1) params.set('page', String(p));
       const res = await fetch(`${ENDPOINTS[currentTab]}?${params}`);
-      const data = await res.json() as unknown[];
-      setResults(Array.isArray(data) ? data : []);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const data = await res.json() as any;
+      if (data && typeof data === 'object' && 'results' in data) {
+        setResults(Array.isArray(data.results) ? data.results : []);
+        setPagination({ total: data.total ?? 0, page: data.page ?? 1, pages: data.pages ?? 1 });
+      } else {
+        setResults(Array.isArray(data) ? data : []);
+        setPagination({ total: 0, page: 1, pages: 1 });
+      }
     } catch {
       setResults([]);
     } finally {
@@ -93,14 +104,22 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const t = setTimeout(() => fetchResults(query, tab, estado), 300);
+    setPage(1);
+    const t = setTimeout(() => fetchResults(query, tab, estado, 1), 300);
     return () => clearTimeout(t);
   }, [query, tab, estado, fetchResults]);
 
   const handleTabChange = (newTab: Tab) => {
     setTab(newTab);
     setQuery('');
+    setPage(1);
     setResults([]);
+  };
+
+  const handlePage = (n: number) => {
+    setPage(n);
+    fetchResults(query, tab, estado, n);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -310,7 +329,8 @@ export default function Home() {
         ) : (
           <>
             <p className="mb-4 text-sm text-gray-500">
-              {results.length} resultado{results.length !== 1 ? 's' : ''}{estado ? ` en ${estado}` : ''}
+              {pagination.total > 0 ? pagination.total : results.length} resultado{(pagination.total || results.length) !== 1 ? 's' : ''}{estado ? ` en ${estado}` : ''}
+              {pagination.pages > 1 ? ` — página ${pagination.page} de ${pagination.pages}` : ''}
             </p>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {tab === 'personas' &&
@@ -335,6 +355,7 @@ export default function Home() {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (results as any[]).map(p => <PeritoCard key={p.id} perito={p} />)}
             </div>
+            <Pagination page={pagination.page} pages={pagination.pages} total={pagination.total} onPage={handlePage} />
           </>
         )}
       </div>

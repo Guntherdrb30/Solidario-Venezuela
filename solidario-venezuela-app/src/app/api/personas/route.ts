@@ -1,42 +1,43 @@
 import { getSql } from '@/lib/db';
 import { sanitize, isValidCedula, isValidPhone, isValidEmail } from '@/lib/validations';
 
+const PAGE_SIZE = 24;
+
 export async function GET(request: Request) {
   const sql = getSql();
   const { searchParams } = new URL(request.url);
   const q = searchParams.get('q')?.trim() ?? '';
   const estadoFilter = searchParams.get('estado')?.trim() ?? '';
+  const page = Math.max(1, parseInt(searchParams.get('page') ?? '1'));
+  const offset = (page - 1) * PAGE_SIZE;
 
+  let rows, countRows;
   if (q && estadoFilter) {
-    const search = `%${q}%`;
-    const rows = await sql`
-      SELECT * FROM personas
-      WHERE (nombre ILIKE ${search} OR apellido ILIKE ${search}
-        OR cedula_numero ILIKE ${search} OR ciudad ILIKE ${search})
-      AND estado = ${estadoFilter}
-      ORDER BY created_at DESC LIMIT 50
-    `;
-    return Response.json(rows);
+    const s = `%${q}%`;
+    [rows, countRows] = await Promise.all([
+      sql`SELECT * FROM personas WHERE (nombre ILIKE ${s} OR apellido ILIKE ${s} OR cedula_numero ILIKE ${s} OR ciudad ILIKE ${s}) AND estado = ${estadoFilter} ORDER BY created_at DESC LIMIT ${PAGE_SIZE} OFFSET ${offset}`,
+      sql`SELECT COUNT(*)::int AS total FROM personas WHERE (nombre ILIKE ${s} OR apellido ILIKE ${s} OR cedula_numero ILIKE ${s} OR ciudad ILIKE ${s}) AND estado = ${estadoFilter}`,
+    ]);
+  } else if (q) {
+    const s = `%${q}%`;
+    [rows, countRows] = await Promise.all([
+      sql`SELECT * FROM personas WHERE nombre ILIKE ${s} OR apellido ILIKE ${s} OR cedula_numero ILIKE ${s} OR ciudad ILIKE ${s} ORDER BY created_at DESC LIMIT ${PAGE_SIZE} OFFSET ${offset}`,
+      sql`SELECT COUNT(*)::int AS total FROM personas WHERE nombre ILIKE ${s} OR apellido ILIKE ${s} OR cedula_numero ILIKE ${s} OR ciudad ILIKE ${s}`,
+    ]);
+  } else if (estadoFilter) {
+    [rows, countRows] = await Promise.all([
+      sql`SELECT * FROM personas WHERE estado = ${estadoFilter} ORDER BY created_at DESC LIMIT ${PAGE_SIZE} OFFSET ${offset}`,
+      sql`SELECT COUNT(*)::int AS total FROM personas WHERE estado = ${estadoFilter}`,
+    ]);
+  } else {
+    [rows, countRows] = await Promise.all([
+      sql`SELECT * FROM personas ORDER BY created_at DESC LIMIT ${PAGE_SIZE} OFFSET ${offset}`,
+      sql`SELECT COUNT(*)::int AS total FROM personas`,
+    ]);
   }
-  if (q) {
-    const search = `%${q}%`;
-    const rows = await sql`
-      SELECT * FROM personas
-      WHERE nombre ILIKE ${search} OR apellido ILIKE ${search}
-        OR cedula_numero ILIKE ${search} OR ciudad ILIKE ${search}
-      ORDER BY created_at DESC LIMIT 50
-    `;
-    return Response.json(rows);
-  }
-  if (estadoFilter) {
-    const rows = await sql`
-      SELECT * FROM personas WHERE estado = ${estadoFilter}
-      ORDER BY created_at DESC LIMIT 50
-    `;
-    return Response.json(rows);
-  }
-  const rows = await sql`SELECT * FROM personas ORDER BY created_at DESC LIMIT 50`;
-  return Response.json(rows);
+
+  const total = countRows[0]?.total ?? 0;
+  return Response.json({ results: rows, total, page, pages: Math.ceil(total / PAGE_SIZE) });
 }
 
 export async function POST(request: Request) {
@@ -49,10 +50,7 @@ export async function POST(request: Request) {
   const ciudad = sanitize(body.ciudad);
 
   if (!nombre || !apellido || !estado || !ciudad) {
-    return Response.json(
-      { error: 'Nombre, apellido, estado y ciudad son requeridos.' },
-      { status: 400 }
-    );
+    return Response.json({ error: 'Nombre, apellido, estado y ciudad son requeridos.' }, { status: 400 });
   }
 
   const cedula_tipo = sanitize(body.cedula_tipo);
@@ -75,22 +73,9 @@ export async function POST(request: Request) {
   const longitud = body.longitud ? Number(body.longitud) : null;
 
   const rows = await sql`
-    INSERT INTO personas (
-      nombre, apellido, cedula_tipo, cedula_numero, fecha_nacimiento,
-      genero, estado, ciudad, telefono, email, foto_url,
-      ultima_vez_fecha, ultima_vez_lugar, descripcion, estado_busqueda,
-      latitud, longitud
-    ) VALUES (
-      ${nombre}, ${apellido}, ${cedula_tipo}, ${cedula_numero},
-      ${sanitize(body.fecha_nacimiento)}, ${sanitize(body.genero)},
-      ${estado}, ${ciudad}, ${telefono}, ${email},
-      ${sanitize(body.foto_url)}, ${sanitize(body.ultima_vez_fecha)},
-      ${sanitize(body.ultima_vez_lugar)}, ${sanitize(body.descripcion)},
-      ${sanitize(body.estado_busqueda) ?? 'buscando'},
-      ${latitud}, ${longitud}
-    )
+    INSERT INTO personas (nombre, apellido, cedula_tipo, cedula_numero, fecha_nacimiento, genero, estado, ciudad, telefono, email, foto_url, ultima_vez_fecha, ultima_vez_lugar, descripcion, estado_busqueda, latitud, longitud)
+    VALUES (${nombre}, ${apellido}, ${cedula_tipo}, ${cedula_numero}, ${sanitize(body.fecha_nacimiento)}, ${sanitize(body.genero)}, ${estado}, ${ciudad}, ${telefono}, ${email}, ${sanitize(body.foto_url)}, ${sanitize(body.ultima_vez_fecha)}, ${sanitize(body.ultima_vez_lugar)}, ${sanitize(body.descripcion)}, ${sanitize(body.estado_busqueda) ?? 'buscando'}, ${latitud}, ${longitud})
     RETURNING *
   `;
-
   return Response.json(rows[0], { status: 201 });
 }

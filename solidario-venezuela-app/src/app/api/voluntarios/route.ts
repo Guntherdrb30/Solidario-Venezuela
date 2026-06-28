@@ -7,38 +7,43 @@ const HABILIDADES_VALIDAS = [
   'Comunicaciones', 'Educación', 'Otro',
 ];
 
+const PAGE_SIZE = 24;
+
 export async function GET(request: Request) {
   const sql = getSql();
   const { searchParams } = new URL(request.url);
   const q = searchParams.get('q')?.trim() ?? '';
   const estadoFilter = searchParams.get('estado')?.trim() ?? '';
+  const page = Math.max(1, parseInt(searchParams.get('page') ?? '1'));
+  const offset = (page - 1) * PAGE_SIZE;
 
-  let rows;
+  let rows, countRows;
   if (q && estadoFilter) {
-    const search = `%${q}%`;
-    rows = await sql`
-      SELECT * FROM voluntarios
-      WHERE (nombre ILIKE ${search} OR habilidad ILIKE ${search} OR ciudad ILIKE ${search})
-        AND estado = ${estadoFilter}
-      ORDER BY created_at DESC LIMIT 50
-    `;
+    const s = `%${q}%`;
+    [rows, countRows] = await Promise.all([
+      sql`SELECT * FROM voluntarios WHERE (nombre ILIKE ${s} OR habilidad ILIKE ${s} OR ciudad ILIKE ${s}) AND estado = ${estadoFilter} ORDER BY created_at DESC LIMIT ${PAGE_SIZE} OFFSET ${offset}`,
+      sql`SELECT COUNT(*)::int AS total FROM voluntarios WHERE (nombre ILIKE ${s} OR habilidad ILIKE ${s} OR ciudad ILIKE ${s}) AND estado = ${estadoFilter}`,
+    ]);
   } else if (q) {
-    const search = `%${q}%`;
-    rows = await sql`
-      SELECT * FROM voluntarios
-      WHERE nombre ILIKE ${search} OR habilidad ILIKE ${search} OR ciudad ILIKE ${search}
-      ORDER BY created_at DESC LIMIT 50
-    `;
+    const s = `%${q}%`;
+    [rows, countRows] = await Promise.all([
+      sql`SELECT * FROM voluntarios WHERE nombre ILIKE ${s} OR habilidad ILIKE ${s} OR ciudad ILIKE ${s} ORDER BY created_at DESC LIMIT ${PAGE_SIZE} OFFSET ${offset}`,
+      sql`SELECT COUNT(*)::int AS total FROM voluntarios WHERE nombre ILIKE ${s} OR habilidad ILIKE ${s} OR ciudad ILIKE ${s}`,
+    ]);
   } else if (estadoFilter) {
-    rows = await sql`
-      SELECT * FROM voluntarios WHERE estado = ${estadoFilter}
-      ORDER BY created_at DESC LIMIT 50
-    `;
+    [rows, countRows] = await Promise.all([
+      sql`SELECT * FROM voluntarios WHERE estado = ${estadoFilter} ORDER BY created_at DESC LIMIT ${PAGE_SIZE} OFFSET ${offset}`,
+      sql`SELECT COUNT(*)::int AS total FROM voluntarios WHERE estado = ${estadoFilter}`,
+    ]);
   } else {
-    rows = await sql`SELECT * FROM voluntarios ORDER BY created_at DESC LIMIT 50`;
+    [rows, countRows] = await Promise.all([
+      sql`SELECT * FROM voluntarios ORDER BY created_at DESC LIMIT ${PAGE_SIZE} OFFSET ${offset}`,
+      sql`SELECT COUNT(*)::int AS total FROM voluntarios`,
+    ]);
   }
 
-  return Response.json(rows);
+  const total = countRows[0]?.total ?? 0;
+  return Response.json({ results: rows, total, page, pages: Math.ceil(total / PAGE_SIZE) });
 }
 
 export async function POST(request: Request) {
@@ -51,12 +56,8 @@ export async function POST(request: Request) {
   const ciudad = sanitize(body.ciudad);
 
   if (!nombre || !habilidad || !estado || !ciudad) {
-    return Response.json(
-      { error: 'Nombre, habilidad, estado y ciudad son requeridos.' },
-      { status: 400 }
-    );
+    return Response.json({ error: 'Nombre, habilidad, estado y ciudad son requeridos.' }, { status: 400 });
   }
-
   if (!HABILIDADES_VALIDAS.includes(habilidad)) {
     return Response.json({ error: 'Habilidad inválida.' }, { status: 400 });
   }
@@ -68,12 +69,8 @@ export async function POST(request: Request) {
 
   const rows = await sql`
     INSERT INTO voluntarios (nombre, habilidad, estado, ciudad, telefono, disponibilidad)
-    VALUES (
-      ${nombre}, ${habilidad}, ${estado}, ${ciudad},
-      ${telefono}, ${sanitize(body.disponibilidad)}
-    )
+    VALUES (${nombre}, ${habilidad}, ${estado}, ${ciudad}, ${telefono}, ${sanitize(body.disponibilidad)})
     RETURNING *
   `;
-
   return Response.json(rows[0], { status: 201 });
 }

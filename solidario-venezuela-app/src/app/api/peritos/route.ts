@@ -2,26 +2,43 @@ import { getSql } from '@/lib/db';
 import { sanitize, isValidPhone, isValidEmail } from '@/lib/validations';
 
 const PROFESIONES_VALIDAS = ['Ingeniero Civil', 'Arquitecto', 'Técnico en Construcción', 'Ingeniero Estructural', 'Inspector de Obra', 'Otro'];
+const PAGE_SIZE = 24;
 
 export async function GET(request: Request) {
   const sql = getSql();
   const { searchParams } = new URL(request.url);
   const q = searchParams.get('q')?.trim() ?? '';
   const estadoFilter = searchParams.get('estado')?.trim() ?? '';
+  const page = Math.max(1, parseInt(searchParams.get('page') ?? '1'));
+  const offset = (page - 1) * PAGE_SIZE;
 
-  let rows;
+  let rows, countRows;
   if (q && estadoFilter) {
     const s = `%${q}%`;
-    rows = await sql`SELECT * FROM peritos WHERE (nombre ILIKE ${s} OR profesion ILIKE ${s} OR ciudad ILIKE ${s}) AND estado = ${estadoFilter} ORDER BY created_at DESC LIMIT 50`;
+    [rows, countRows] = await Promise.all([
+      sql`SELECT * FROM peritos WHERE (nombre ILIKE ${s} OR profesion ILIKE ${s} OR ciudad ILIKE ${s}) AND estado = ${estadoFilter} ORDER BY created_at DESC LIMIT ${PAGE_SIZE} OFFSET ${offset}`,
+      sql`SELECT COUNT(*)::int AS total FROM peritos WHERE (nombre ILIKE ${s} OR profesion ILIKE ${s} OR ciudad ILIKE ${s}) AND estado = ${estadoFilter}`,
+    ]);
   } else if (q) {
     const s = `%${q}%`;
-    rows = await sql`SELECT * FROM peritos WHERE nombre ILIKE ${s} OR profesion ILIKE ${s} OR ciudad ILIKE ${s} ORDER BY created_at DESC LIMIT 50`;
+    [rows, countRows] = await Promise.all([
+      sql`SELECT * FROM peritos WHERE nombre ILIKE ${s} OR profesion ILIKE ${s} OR ciudad ILIKE ${s} ORDER BY created_at DESC LIMIT ${PAGE_SIZE} OFFSET ${offset}`,
+      sql`SELECT COUNT(*)::int AS total FROM peritos WHERE nombre ILIKE ${s} OR profesion ILIKE ${s} OR ciudad ILIKE ${s}`,
+    ]);
   } else if (estadoFilter) {
-    rows = await sql`SELECT * FROM peritos WHERE estado = ${estadoFilter} ORDER BY created_at DESC LIMIT 50`;
+    [rows, countRows] = await Promise.all([
+      sql`SELECT * FROM peritos WHERE estado = ${estadoFilter} ORDER BY created_at DESC LIMIT ${PAGE_SIZE} OFFSET ${offset}`,
+      sql`SELECT COUNT(*)::int AS total FROM peritos WHERE estado = ${estadoFilter}`,
+    ]);
   } else {
-    rows = await sql`SELECT * FROM peritos ORDER BY created_at DESC LIMIT 100`;
+    [rows, countRows] = await Promise.all([
+      sql`SELECT * FROM peritos ORDER BY created_at DESC LIMIT ${PAGE_SIZE} OFFSET ${offset}`,
+      sql`SELECT COUNT(*)::int AS total FROM peritos`,
+    ]);
   }
-  return Response.json(rows);
+
+  const total = countRows[0]?.total ?? 0;
+  return Response.json({ results: rows, total, page, pages: Math.ceil(total / PAGE_SIZE) });
 }
 
 export async function POST(request: Request) {
