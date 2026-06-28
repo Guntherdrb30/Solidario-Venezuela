@@ -153,6 +153,59 @@ export async function POST() {
   `;
 
   await sql`
+    CREATE TABLE IF NOT EXISTS donaciones (
+      id SERIAL PRIMARY KEY,
+      tipo VARCHAR(20) NOT NULL DEFAULT 'dinero',
+      monto NUMERIC(12,2),
+      moneda VARCHAR(10) DEFAULT 'USD',
+      descripcion_especie TEXT,
+      categoria VARCHAR(50) NOT NULL,
+      proposito TEXT NOT NULL,
+      donante_nombre VARCHAR(150) NOT NULL,
+      donante_empresa VARCHAR(200),
+      donante_telefono VARCHAR(30),
+      donante_email VARCHAR(200),
+      donante_pais VARCHAR(100) NOT NULL,
+      organizacion_id INTEGER,
+      estado VARCHAR(20) DEFAULT 'disponible',
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS organizaciones (
+      id SERIAL PRIMARY KEY,
+      nombre VARCHAR(200) NOT NULL,
+      tipo VARCHAR(50) NOT NULL,
+      descripcion TEXT NOT NULL,
+      areas TEXT,
+      contacto_nombre VARCHAR(150) NOT NULL,
+      telefono VARCHAR(30),
+      email VARCHAR(200),
+      website VARCHAR(300),
+      estado VARCHAR(50),
+      ciudad VARCHAR(100),
+      pais_sede VARCHAR(100) NOT NULL DEFAULT 'Venezuela',
+      rif VARCHAR(20),
+      verificada BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS api_tokens (
+      id SERIAL PRIMARY KEY,
+      nombre VARCHAR(200) NOT NULL,
+      token VARCHAR(100) NOT NULL UNIQUE,
+      dominio VARCHAR(300) NOT NULL,
+      activo BOOLEAN DEFAULT TRUE,
+      usos INTEGER DEFAULT 0,
+      ultimo_uso TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+
+  await sql`
     CREATE TABLE IF NOT EXISTS audit_logs (
       id SERIAL PRIMARY KEY,
       accion VARCHAR(100) NOT NULL,

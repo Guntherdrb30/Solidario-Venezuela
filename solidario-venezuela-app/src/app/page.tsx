@@ -8,6 +8,8 @@ import { VoluntarioCard } from '@/components/VoluntarioCard';
 import { RescateCard } from '@/components/RescateCard';
 import { DanoCard } from '@/components/DanoCard';
 import { PeritoCard } from '@/components/PeritoCard';
+import { DonacionCard } from '@/components/DonacionCard';
+import { OrganizacionCard } from '@/components/OrganizacionCard';
 import { StatsBar } from '@/components/StatsBar';
 import { AvisoBanner } from '@/components/AvisoBanner';
 import { AgregarPersonaModal } from '@/components/AgregarPersonaModal';
@@ -17,6 +19,8 @@ import { AgregarVoluntarioModal } from '@/components/AgregarVoluntarioModal';
 import { AgregarRescateModal } from '@/components/AgregarRescateModal';
 import { AgregarDanoModal } from '@/components/AgregarDanoModal';
 import { AgregarPeritoModal } from '@/components/AgregarPeritoModal';
+import { AgregarDonacionModal } from '@/components/AgregarDonacionModal';
+import { AgregarOrganizacionModal } from '@/components/AgregarOrganizacionModal';
 import { Pagination } from '@/components/Pagination';
 import { ESTADOS_VENEZUELA } from '@/lib/venezuela-data';
 
@@ -31,36 +35,42 @@ async function shareApp() {
   }
 }
 
-type Tab = 'personas' | 'centros' | 'voluntarios' | 'denuncias' | 'rescate' | 'danos' | 'peritos';
+type Tab = 'donaciones' | 'organizaciones' | 'personas' | 'centros' | 'voluntarios' | 'denuncias' | 'rescate' | 'danos' | 'peritos';
 
 const TABS: { value: Tab; label: string; icon: string }[] = [
-  { value: 'personas',    label: 'Personas',         icon: '👤' },
-  { value: 'centros',     label: 'Centros de Ayuda', icon: '🏠' },
-  { value: 'voluntarios', label: 'Voluntarios',      icon: '🙋' },
-  { value: 'rescate',     label: 'Rescate',          icon: '🆘' },
-  { value: 'danos',       label: 'Daños',            icon: '🏚️' },
-  { value: 'peritos',     label: 'Peritos',          icon: '👷' },
-  { value: 'denuncias',   label: 'Denuncias',        icon: '🚨' },
+  { value: 'donaciones',    label: 'Donaciones',       icon: '💰' },
+  { value: 'organizaciones',label: 'Organizaciones',   icon: '🏛️' },
+  { value: 'personas',      label: 'Personas',         icon: '👤' },
+  { value: 'centros',       label: 'Centros de Ayuda', icon: '🏠' },
+  { value: 'voluntarios',   label: 'Voluntarios',      icon: '🙋' },
+  { value: 'rescate',       label: 'Rescate',          icon: '🆘' },
+  { value: 'danos',         label: 'Daños',            icon: '🏚️' },
+  { value: 'peritos',       label: 'Peritos',          icon: '👷' },
+  { value: 'denuncias',     label: 'Denuncias',        icon: '🚨' },
 ];
 
 const ENDPOINTS: Record<Tab, string> = {
-  personas:    '/api/personas',
-  centros:     '/api/centros',
-  denuncias:   '/api/denuncias',
-  voluntarios: '/api/voluntarios',
-  rescate:     '/api/rescate',
-  danos:       '/api/danos',
-  peritos:     '/api/peritos',
+  donaciones:    '/api/donaciones',
+  organizaciones:'/api/organizaciones',
+  personas:      '/api/personas',
+  centros:       '/api/centros',
+  denuncias:     '/api/denuncias',
+  voluntarios:   '/api/voluntarios',
+  rescate:       '/api/rescate',
+  danos:         '/api/danos',
+  peritos:       '/api/peritos',
 };
 
 const EMPTY_LABELS: Record<Tab, string> = {
-  personas:    'No hay personas registradas aún',
-  centros:     'No hay centros de ayuda registrados aún',
-  denuncias:   'No hay denuncias registradas aún',
-  voluntarios: 'No hay voluntarios registrados aún',
-  rescate:     'No hay solicitudes de rescate activas',
-  danos:       'No hay reportes de daños estructurales',
-  peritos:     'No hay peritos voluntarios registrados aún',
+  donaciones:    'No hay donaciones registradas aún',
+  organizaciones:'No hay organizaciones registradas aún',
+  personas:      'No hay personas registradas aún',
+  centros:       'No hay centros de ayuda registrados aún',
+  denuncias:     'No hay denuncias registradas aún',
+  voluntarios:   'No hay voluntarios registrados aún',
+  rescate:       'No hay solicitudes de rescate activas',
+  danos:         'No hay reportes de daños estructurales',
+  peritos:       'No hay peritos voluntarios registrados aún',
 };
 
 export default function Home() {
@@ -78,6 +88,8 @@ export default function Home() {
   const [showAddRescate, setShowAddRescate] = useState(false);
   const [showAddDano, setShowAddDano] = useState(false);
   const [showAddPerito, setShowAddPerito] = useState(false);
+  const [showAddDonacion, setShowAddDonacion] = useState(false);
+  const [showAddOrganizacion, setShowAddOrganizacion] = useState(false);
 
   const fetchResults = useCallback(async (q: string, currentTab: Tab, est: string, p = 1) => {
     setLoading(true);
@@ -147,6 +159,49 @@ export default function Home() {
               </svg>
               Compartir esta aplicación
             </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Sub-hero: Donaciones ── */}
+      <section className="bg-gradient-to-br from-[#1a3a2a] to-[#0f2a1a] py-10 px-5 border-t border-white/10">
+        <div className="mx-auto max-w-4xl">
+          <div className="flex flex-col md:flex-row items-center gap-8">
+            <div className="flex-1">
+              <p className="text-[#f0d963] text-xs font-semibold uppercase tracking-widest mb-3">Nueva sección — Transparencia en donaciones</p>
+              <h2 className="text-2xl font-bold text-white mb-3">
+                ¿Recaudaste o quieres donar? Regístralo aquí.
+              </h2>
+              <p className="text-[#a8c4b0] text-sm leading-relaxed mb-4">
+                Uno de los mayores problemas en emergencias es que las donaciones no llegan a su destino.
+                Esta plataforma documenta públicamente cada donación — quién la hizo, cuánto es, para qué debe usarse —
+                y conecta a los donantes con organizaciones verificadas en Venezuela que pueden recibirla responsablemente.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <button onClick={() => { handleTabChange('donaciones'); document.getElementById('buscar')?.scrollIntoView({ behavior: 'smooth' }); }}
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#f0d963] px-5 py-2.5 text-sm font-bold text-[#17221c] hover:bg-yellow-300 transition-colors">
+                  💰 Registrar donación
+                </button>
+                <button onClick={() => { handleTabChange('organizaciones'); document.getElementById('buscar')?.scrollIntoView({ behavior: 'smooth' }); }}
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/20 transition-colors">
+                  🏛️ Ver organizaciones
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3 shrink-0">
+              {[
+                { icon: '💰', label: 'Documenta', desc: 'Registra monto, tipo y propósito' },
+                { icon: '🏛️', label: 'Conecta', desc: 'Encuentra org. verificadas' },
+                { icon: '📋', label: 'Transparencia', desc: 'Todo queda documentado' },
+                { icon: '✅', label: 'Trazabilidad', desc: 'Responsables reales identificados' },
+              ].map(item => (
+                <div key={item.label} className="rounded-xl bg-white/10 border border-white/10 p-3 text-center">
+                  <p className="text-2xl mb-1">{item.icon}</p>
+                  <p className="text-xs font-bold text-white">{item.label}</p>
+                  <p className="text-xs text-[#a8c4b0] mt-0.5">{item.desc}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -221,6 +276,18 @@ export default function Home() {
               <button onClick={() => setShowAddPerito(true)}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors shadow-sm">
                 👷 Ofrecer peritaje
+              </button>
+            )}
+            {tab === 'donaciones' && (
+              <button onClick={() => setShowAddDonacion(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-[#1f7a4d] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#17663f] transition-colors shadow-sm">
+                💰 Registrar donación
+              </button>
+            )}
+            {tab === 'organizaciones' && (
+              <button onClick={() => setShowAddOrganizacion(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-[#1f7a4d] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#17663f] transition-colors shadow-sm">
+                🏛️ Registrar organización
               </button>
             )}
           </div>
@@ -299,6 +366,28 @@ export default function Home() {
             </div>
           </div>
         )}
+        {tab === 'donaciones' && (
+          <div className="mb-5 flex items-start gap-3 rounded-xl bg-[#eef6f1] border border-[#1f7a4d]/20 px-4 py-3">
+            <span className="text-2xl shrink-0">💰</span>
+            <div>
+              <p className="text-sm font-semibold text-[#17221c]">Donaciones documentadas públicamente</p>
+              <p className="text-xs text-[#526058] mt-0.5">
+                Personas, empresas y organizaciones que recaudaron o desean donar. Cada registro incluye el propósito y los datos del responsable para garantizar transparencia.
+              </p>
+            </div>
+          </div>
+        )}
+        {tab === 'organizaciones' && (
+          <div className="mb-5 flex items-start gap-3 rounded-xl bg-[#eef6f1] border border-[#1f7a4d]/20 px-4 py-3">
+            <span className="text-2xl shrink-0">🏛️</span>
+            <div>
+              <p className="text-sm font-semibold text-[#17221c]">Organizaciones receptoras de donaciones</p>
+              <p className="text-xs text-[#526058] mt-0.5">
+                ONGs, fundaciones, grupos comunitarios e iglesias que reciben y distribuyen ayuda. Las marcadas con ✅ han sido verificadas por el equipo de Solidario Venezuela.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Resultados */}
         {loading ? (
@@ -354,6 +443,12 @@ export default function Home() {
               {tab === 'peritos' &&
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (results as any[]).map(p => <PeritoCard key={p.id} perito={p} />)}
+              {tab === 'donaciones' &&
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (results as any[]).map(d => <DonacionCard key={d.id} donacion={d} />)}
+              {tab === 'organizaciones' &&
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (results as any[]).map(o => <OrganizacionCard key={o.id} org={o} />)}
             </div>
             <Pagination page={pagination.page} pages={pagination.pages} total={pagination.total} onPage={handlePage} />
           </>
@@ -367,6 +462,8 @@ export default function Home() {
       {showAddRescate && <AgregarRescateModal onClose={() => setShowAddRescate(false)} onSuccess={() => fetchResults(query, tab, estado)} />}
       {showAddDano && <AgregarDanoModal onClose={() => setShowAddDano(false)} onSuccess={() => fetchResults(query, tab, estado)} />}
       {showAddPerito && <AgregarPeritoModal onClose={() => setShowAddPerito(false)} onSuccess={() => fetchResults(query, tab, estado)} />}
+      {showAddDonacion && <AgregarDonacionModal onClose={() => setShowAddDonacion(false)} onSuccess={() => fetchResults(query, tab, estado)} />}
+      {showAddOrganizacion && <AgregarOrganizacionModal onClose={() => setShowAddOrganizacion(false)} onSuccess={() => fetchResults(query, tab, estado)} />}
     </main>
   );
 }
