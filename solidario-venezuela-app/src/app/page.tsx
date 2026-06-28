@@ -61,6 +61,18 @@ const ENDPOINTS: Record<Tab, string> = {
   peritos:       '/api/peritos',
 };
 
+const SEARCH_PLACEHOLDERS: Record<Tab, string> = {
+  personas:       'Buscar persona por nombre, cédula, ciudad...',
+  centros:        'Buscar centro por nombre, tipo o ciudad...',
+  voluntarios:    'Buscar voluntario por habilidad o ciudad...',
+  denuncias:      'Buscar denuncia por tipo o ciudad...',
+  rescate:        'Buscar solicitud por tipo, dirección o ciudad...',
+  danos:          'Buscar daño por dirección, tipo o ciudad...',
+  peritos:        'Buscar perito por profesión o ciudad...',
+  donaciones:     'Buscar donación por propósito, categoría o donante...',
+  organizaciones: 'Buscar organización por nombre, área o ciudad...',
+};
+
 const EMPTY_LABELS: Record<Tab, string> = {
   donaciones:    'No hay donaciones registradas aún',
   organizaciones:'No hay organizaciones registradas aún',
@@ -137,20 +149,51 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#f8f7f2]">
       {/* ── Hero ── */}
-      <section id="buscar" className="bg-[#17221c] py-14 px-5">
+      <section id="buscar" className="bg-[#17221c] py-12 px-5">
         <div className="mx-auto max-w-4xl text-center">
-          <p className="mb-3 text-sm font-medium uppercase tracking-widest text-[#f0d963]">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-[#f0d963]">
             Solidario Venezuela — Terremoto Venezuela
           </p>
-          <h1 className="mb-3 text-3xl font-bold text-white sm:text-4xl">
-            Busca personas desaparecidas o centros de ayuda
+          <h1 className="mb-2 text-3xl font-bold text-white sm:text-4xl">
+            ¿Qué necesitas buscar?
           </h1>
-          <p className="mb-8 text-[#a8c4b0] text-base sm:text-lg">
-            Apoyo a damnificados y afectados por el terremoto en Venezuela
+          <p className="mb-6 text-[#a8c4b0] text-sm">
+            Selecciona una categoría y escribe tu búsqueda
           </p>
-          <SearchBar value={query} onChange={setQuery} />
+
+          {/* Selector de categoría */}
+          <div className="mb-5 flex flex-wrap justify-center gap-2">
+            {TABS.map(t => (
+              <button key={t.value} type="button"
+                onClick={() => {
+                  handleTabChange(t.value);
+                  document.getElementById('resultados')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
+                className={`rounded-full border px-4 py-2 text-sm font-medium transition-all ${
+                  tab === t.value
+                    ? t.value === 'rescate' || t.value === 'denuncias'
+                      ? 'border-red-400 bg-red-600 text-white shadow-lg scale-105'
+                      : t.value === 'danos'
+                      ? 'border-orange-400 bg-orange-500 text-white shadow-lg scale-105'
+                      : t.value === 'peritos'
+                      ? 'border-blue-400 bg-blue-600 text-white shadow-lg scale-105'
+                      : 'border-[#1f7a4d] bg-[#1f7a4d] text-white shadow-lg scale-105'
+                    : 'border-white/20 bg-white/10 text-white hover:bg-white/20'
+                }`}>
+                {t.icon} {t.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Buscador con placeholder contextual */}
+          <SearchBar
+            value={query}
+            onChange={setQuery}
+            placeholder={SEARCH_PLACEHOLDERS[tab]}
+          />
+
           <StatsBar />
-          <div className="mt-6">
+          <div className="mt-5">
             <button onClick={shareApp}
               className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/20 transition-colors">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -210,7 +253,7 @@ export default function Home() {
       <AvisoBanner />
 
       {/* ── Contenido ── */}
-      <div className="mx-auto max-w-6xl px-5 py-8">
+      <div id="resultados" className="mx-auto max-w-6xl px-5 py-8">
 
         {/* Tabs + acciones */}
         <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
