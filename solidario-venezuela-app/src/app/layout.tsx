@@ -20,14 +20,25 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://solidario-venezuela.vercel.app"),
   title: "Solidario Venezuela",
   description:
-    "Plataforma social para organizar iniciativas, aliados y apoyo solidario en Venezuela.",
+    "Plataforma de apoyo a damnificados por el terremoto en Venezuela. Busca personas, centros de ayuda, donaciones y organizaciones.",
   manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon-192x192.png",  sizes: "192x192", type: "image/png" },
+      { url: "/app-icon.svg",      type: "image/svg+xml" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
   openGraph: {
     title: "Solidario Venezuela",
     description:
-      "Plataforma social para organizar iniciativas, aliados y apoyo solidario en Venezuela.",
+      "Plataforma de apoyo a damnificados por el terremoto en Venezuela. Busca personas, centros de ayuda, donaciones y organizaciones.",
     url: "https://solidario-venezuela.vercel.app",
     siteName: "Solidario Venezuela",
+    images: [{ url: "/icon-512x512.png", width: 512, height: 512 }],
     locale: "es_VE",
     type: "website",
   },
