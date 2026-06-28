@@ -93,6 +93,7 @@ export default function Home() {
   const [pagination, setPagination] = useState({ total: 0, page: 1, pages: 1 });
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showAddPersona, setShowAddPersona] = useState(false);
   const [showAddCentro, setShowAddCentro] = useState(false);
   const [showAddDenuncia, setShowAddDenuncia] = useState(false);
@@ -252,250 +253,307 @@ export default function Home() {
       {/* ── Avisos oficiales ── */}
       <AvisoBanner />
 
-      {/* ── Contenido ── */}
-      <div id="resultados" className="mx-auto max-w-6xl px-5 py-8">
-
-        {/* Tabs + acciones */}
-        <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="inline-flex flex-wrap gap-1 rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
-            {TABS.map(t => (
-              <button key={t.value} type="button" onClick={() => handleTabChange(t.value)}
-                className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                  tab === t.value
-                    ? t.value === 'denuncias'
-                      ? 'bg-red-600 text-white shadow-sm'
-                      : t.value === 'rescate'
-                      ? 'bg-red-700 text-white shadow-sm'
-                      : t.value === 'danos'
-                      ? 'bg-orange-600 text-white shadow-sm'
-                      : t.value === 'peritos'
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'bg-[#1f7a4d] text-white shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}>
-                {t.icon} {t.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex gap-2 flex-wrap">
-            {tab === 'personas' && (
-              <button onClick={() => setShowAddPersona(true)}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-[#1f7a4d] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#17663f] transition-colors shadow-sm">
-                + Agregar Persona
-              </button>
-            )}
-            {tab === 'centros' && (
-              <button onClick={() => setShowAddCentro(true)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-[#1f7a4d] px-4 py-2.5 text-sm font-semibold text-[#1f7a4d] hover:bg-[#eef6f1] transition-colors">
-                + Agregar Centro
-              </button>
-            )}
-            {tab === 'voluntarios' && (
-              <button onClick={() => setShowAddVoluntario(true)}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-[#1f7a4d] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#17663f] transition-colors shadow-sm">
-                🙋 Ser voluntario
-              </button>
-            )}
-            {tab === 'denuncias' && (
-              <button onClick={() => setShowAddDenuncia(true)}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 transition-colors shadow-sm">
-                🚨 Hacer denuncia anónima
-              </button>
-            )}
-            {tab === 'rescate' && (
-              <button onClick={() => setShowAddRescate(true)}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-red-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-800 transition-colors shadow-sm">
-                🆘 Pedir rescate
-              </button>
-            )}
-            {tab === 'danos' && (
-              <button onClick={() => setShowAddDano(true)}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-700 transition-colors shadow-sm">
-                🏚️ Reportar daño
-              </button>
-            )}
-            {tab === 'peritos' && (
-              <button onClick={() => setShowAddPerito(true)}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors shadow-sm">
-                👷 Ofrecer peritaje
-              </button>
-            )}
-            {tab === 'donaciones' && (
-              <button onClick={() => setShowAddDonacion(true)}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-[#1f7a4d] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#17663f] transition-colors shadow-sm">
-                💰 Registrar donación
-              </button>
-            )}
-            {tab === 'organizaciones' && (
-              <button onClick={() => setShowAddOrganizacion(true)}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-[#1f7a4d] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#17663f] transition-colors shadow-sm">
-                🏛️ Registrar organización
-              </button>
-            )}
-          </div>
+      {/* ── Mobile sticky bar ── */}
+      <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-gray-200 bg-white px-4 py-3 shadow-sm lg:hidden">
+        <button
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Abrir menú"
+          className="flex flex-col gap-1 rounded-lg p-2 hover:bg-gray-100 transition-colors">
+          <span className="block h-0.5 w-5 bg-gray-700 rounded-full" />
+          <span className="block h-0.5 w-5 bg-gray-700 rounded-full" />
+          <span className="block h-0.5 w-5 bg-gray-700 rounded-full" />
+        </button>
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <span className="text-lg">{TABS.find(t => t.value === tab)?.icon}</span>
+          <span className="truncate font-semibold text-gray-900">{TABS.find(t => t.value === tab)?.label}</span>
         </div>
+        {tab === 'personas'      && <button onClick={() => setShowAddPersona(true)}     className="shrink-0 rounded-lg bg-[#1f7a4d] px-3 py-1.5 text-xs font-bold text-white">+ Agregar</button>}
+        {tab === 'centros'       && <button onClick={() => setShowAddCentro(true)}      className="shrink-0 rounded-lg bg-[#1f7a4d] px-3 py-1.5 text-xs font-bold text-white">+ Agregar</button>}
+        {tab === 'voluntarios'   && <button onClick={() => setShowAddVoluntario(true)}  className="shrink-0 rounded-lg bg-[#1f7a4d] px-3 py-1.5 text-xs font-bold text-white">🙋 Unirme</button>}
+        {tab === 'denuncias'     && <button onClick={() => setShowAddDenuncia(true)}    className="shrink-0 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-bold text-white">🚨 Denunciar</button>}
+        {tab === 'rescate'       && <button onClick={() => setShowAddRescate(true)}     className="shrink-0 rounded-lg bg-red-700 px-3 py-1.5 text-xs font-bold text-white">🆘 SOS</button>}
+        {tab === 'danos'         && <button onClick={() => setShowAddDano(true)}        className="shrink-0 rounded-lg bg-orange-600 px-3 py-1.5 text-xs font-bold text-white">+ Reportar</button>}
+        {tab === 'peritos'       && <button onClick={() => setShowAddPerito(true)}      className="shrink-0 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white">👷 Ofrecer</button>}
+        {tab === 'donaciones'    && <button onClick={() => setShowAddDonacion(true)}    className="shrink-0 rounded-lg bg-[#1f7a4d] px-3 py-1.5 text-xs font-bold text-white">💰 Donar</button>}
+        {tab === 'organizaciones'&& <button onClick={() => setShowAddOrganizacion(true)}className="shrink-0 rounded-lg bg-[#1f7a4d] px-3 py-1.5 text-xs font-bold text-white">🏛️ Registrar</button>}
+      </div>
 
-        {/* Filtro por estado */}
-        {tab !== 'denuncias' && (
-          <div className="mb-5 flex items-center gap-3">
-            <label className="text-sm font-medium text-gray-600 shrink-0">Filtrar por estado:</label>
-            <select value={estado} onChange={e => setEstado(e.target.value)}
-              className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 focus:border-[#1f7a4d] focus:outline-none shadow-sm">
-              <option value="">Todos los estados</option>
-              {ESTADOS_VENEZUELA.map(e => <option key={e} value={e}>{e}</option>)}
-            </select>
-            {estado && (
-              <button onClick={() => setEstado('')} className="text-xs text-gray-400 hover:text-gray-700">
-                ✕ Limpiar
-              </button>
-            )}
-          </div>
-        )}
+      {/* ── Overlay sidebar móvil ── */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
-        {/* Avisos contextuales por tab */}
-        {tab === 'denuncias' && (
-          <div className="mb-5 flex items-start gap-3 rounded-xl bg-red-50 border border-red-200 px-4 py-3">
-            <span className="text-red-500 text-xl shrink-0">🔒</span>
-            <div>
-              <p className="text-sm font-semibold text-red-800">Denuncias completamente anónimas</p>
-              <p className="text-xs text-red-600 mt-0.5">
-                No almacenamos ningún dato personal. Puedes reportar robos, extorsiones, abusos de autoridad u otras anomalías con total privacidad.
-              </p>
-            </div>
-          </div>
-        )}
-        {tab === 'voluntarios' && (
-          <div className="mb-5 flex items-start gap-3 rounded-xl bg-[#eef6f1] border border-[#1f7a4d]/20 px-4 py-3">
-            <span className="text-2xl shrink-0">🙋</span>
-            <div>
-              <p className="text-sm font-semibold text-[#17221c]">¿Puedes ayudar?</p>
-              <p className="text-xs text-[#526058] mt-0.5">
-                Regístrate como voluntario para conectarte con centros y familias que necesitan apoyo.
-              </p>
-            </div>
-          </div>
-        )}
-        {tab === 'rescate' && (
-          <div className="mb-5 flex items-start gap-3 rounded-xl bg-red-50 border border-red-200 px-4 py-3">
-            <span className="text-2xl shrink-0">🆘</span>
-            <div>
-              <p className="text-sm font-semibold text-red-800">Solicitudes de rescate activas</p>
-              <p className="text-xs text-red-600 mt-0.5">
-                Para emergencias con riesgo de vida también llama al <strong>911</strong>. Estas solicitudes son visibles para brigadas y voluntarios de rescate.
-              </p>
-            </div>
-          </div>
-        )}
-        {tab === 'danos' && (
-          <div className="mb-5 flex items-start gap-3 rounded-xl bg-orange-50 border border-orange-200 px-4 py-3">
-            <span className="text-2xl shrink-0">🏚️</span>
-            <div>
-              <p className="text-sm font-semibold text-orange-800">Reportes de daños estructurales</p>
-              <p className="text-xs text-orange-700 mt-0.5">
-                Peritos e ingenieros voluntarios pueden ver estos reportes y contactar a los afectados para ofrecer evaluación gratuita.
-              </p>
-            </div>
-          </div>
-        )}
-        {tab === 'peritos' && (
-          <div className="mb-5 flex items-start gap-3 rounded-xl bg-blue-50 border border-blue-200 px-4 py-3">
-            <span className="text-2xl shrink-0">👷</span>
-            <div>
-              <p className="text-sm font-semibold text-blue-800">Peritos e ingenieros voluntarios</p>
-              <p className="text-xs text-blue-700 mt-0.5">
-                Profesionales del área que ofrecen peritaje gratuito a los afectados por el terremoto. ¿Eres ingeniero o arquitecto? ¡Regístrate!
-              </p>
-            </div>
-          </div>
-        )}
-        {tab === 'donaciones' && (
-          <div className="mb-5 flex items-start gap-3 rounded-xl bg-[#eef6f1] border border-[#1f7a4d]/20 px-4 py-3">
-            <span className="text-2xl shrink-0">💰</span>
-            <div>
-              <p className="text-sm font-semibold text-[#17221c]">Donaciones documentadas públicamente</p>
-              <p className="text-xs text-[#526058] mt-0.5">
-                Personas, empresas y organizaciones que recaudaron o desean donar. Cada registro incluye el propósito y los datos del responsable para garantizar transparencia.
-              </p>
-            </div>
-          </div>
-        )}
-        {tab === 'organizaciones' && (
-          <div className="mb-5 flex items-start gap-3 rounded-xl bg-[#eef6f1] border border-[#1f7a4d]/20 px-4 py-3">
-            <span className="text-2xl shrink-0">🏛️</span>
-            <div>
-              <p className="text-sm font-semibold text-[#17221c]">Organizaciones receptoras de donaciones</p>
-              <p className="text-xs text-[#526058] mt-0.5">
-                ONGs, fundaciones, grupos comunitarios e iglesias que reciben y distribuyen ayuda. Las marcadas con ✅ han sido verificadas por el equipo de Solidario Venezuela.
-              </p>
-            </div>
-          </div>
-        )}
+      {/* ── Layout: Sidebar + Contenido ── */}
+      <div id="resultados" className="flex items-start">
 
-        {/* Resultados */}
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-24 text-gray-400">
-            <div className="mb-3 h-8 w-8 animate-spin rounded-full border-2 border-[#1f7a4d] border-t-transparent" />
-            <p className="text-sm">Buscando...</p>
-          </div>
-        ) : results.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <p className="text-5xl mb-4">{TABS.find(t => t.value === tab)?.icon}</p>
-            <p className="text-base font-medium text-gray-600">
-              {query || estado ? `No se encontraron resultados${estado ? ` en ${estado}` : ''}${query ? ` para "${query}"` : ''}` : EMPTY_LABELS[tab]}
-            </p>
-            <p className="text-sm text-gray-400 mt-2">
-              {tab === 'denuncias'
-                ? 'Usa el botón de arriba para registrar una denuncia anónima'
-                : tab === 'voluntarios'
-                ? 'Usa el botón para registrarte como voluntario'
-                : tab === 'rescate'
-                ? 'Usa el botón para enviar una solicitud de rescate'
-                : tab === 'danos'
-                ? 'Usa el botón para reportar un daño estructural'
-                : tab === 'peritos'
-                ? 'Usa el botón para registrarte como perito voluntario'
-                : 'Usa los botones de arriba para agregar el primero'}
-            </p>
-          </div>
-        ) : (
-          <>
-            <p className="mb-4 text-sm text-gray-500">
-              {pagination.total > 0 ? pagination.total : results.length} resultado{(pagination.total || results.length) !== 1 ? 's' : ''}{estado ? ` en ${estado}` : ''}
-              {pagination.pages > 1 ? ` — página ${pagination.page} de ${pagination.pages}` : ''}
-            </p>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {tab === 'personas' &&
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (results as any[]).map(p => <PersonaCard key={p.id} persona={p} />)}
-              {tab === 'centros' &&
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (results as any[]).map(c => <CentroCard key={c.id} centro={c} />)}
-              {tab === 'denuncias' &&
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (results as any[]).map(d => <DenunciaCard key={d.id} denuncia={d} />)}
-              {tab === 'voluntarios' &&
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (results as any[]).map(v => <VoluntarioCard key={v.id} voluntario={v} />)}
-              {tab === 'rescate' &&
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (results as any[]).map(r => <RescateCard key={r.id} rescate={r} />)}
-              {tab === 'danos' &&
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (results as any[]).map(d => <DanoCard key={d.id} dano={d} />)}
-              {tab === 'peritos' &&
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (results as any[]).map(p => <PeritoCard key={p.id} perito={p} />)}
-              {tab === 'donaciones' &&
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (results as any[]).map(d => <DonacionCard key={d.id} donacion={d} />)}
-              {tab === 'organizaciones' &&
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (results as any[]).map(o => <OrganizacionCard key={o.id} org={o} />)}
+        {/* Sidebar */}
+        <aside className={`
+          fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-white shadow-2xl border-r border-gray-100
+          transition-transform duration-300 ease-in-out
+          lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:w-64 lg:translate-x-0 lg:shadow-none
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        `}>
+          {/* Sidebar header */}
+          <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-5 py-5">
+            <div>
+              <p className="font-bold text-[#17221c] text-base">🇻🇪 Solidario Venezuela</p>
+              <p className="text-xs text-gray-400 mt-0.5">Terremoto Venezuela</p>
             </div>
-            <Pagination page={pagination.page} pages={pagination.pages} total={pagination.total} onPage={handlePage} />
-          </>
-        )}
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 lg:hidden">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Nav items */}
+          <nav className="flex-1 overflow-y-auto px-3 py-4">
+            <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-gray-400">Secciones</p>
+            <div className="space-y-0.5">
+              {TABS.map(t => {
+                const isActive = tab === t.value;
+                const activeCls =
+                  t.value === 'rescate' || t.value === 'denuncias' ? 'bg-red-600 text-white shadow-sm' :
+                  t.value === 'danos'   ? 'bg-orange-500 text-white shadow-sm' :
+                  t.value === 'peritos' ? 'bg-blue-600 text-white shadow-sm' :
+                  'bg-[#1f7a4d] text-white shadow-sm';
+                return (
+                  <button key={t.value} type="button"
+                    onClick={() => { handleTabChange(t.value); setSidebarOpen(false); }}
+                    className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium transition-all ${
+                      isActive ? activeCls : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                    }`}>
+                    <span className="shrink-0 text-xl">{t.icon}</span>
+                    <span className="flex-1">{t.label}</span>
+                    {isActive && <span className="h-2 w-2 shrink-0 rounded-full bg-white/70" />}
+                  </button>
+                );
+              })}
+            </div>
+          </nav>
+
+          {/* Sidebar footer */}
+          <div className="shrink-0 border-t border-gray-100 px-3 py-4 space-y-1">
+            <button onClick={shareApp}
+              className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors">
+              <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+              </svg>
+              Compartir aplicación
+            </button>
+            <a href="/api-docs" target="_blank" rel="noopener noreferrer"
+              className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors">
+              <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+              </svg>
+              API pública / Docs
+            </a>
+          </div>
+        </aside>
+
+        {/* Contenido principal */}
+        <div className="min-w-0 flex-1 px-4 py-6 lg:px-8">
+
+          {/* Header de sección + botón de acción */}
+          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">
+                {TABS.find(t => t.value === tab)?.icon}{' '}
+                {TABS.find(t => t.value === tab)?.label}
+              </h2>
+              <p className="text-sm text-gray-400 mt-0.5">
+                {pagination.total > 0 ? `${pagination.total} registros encontrados` : 'Sin registros aún'}
+              </p>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              {tab === 'personas' && (
+                <button onClick={() => setShowAddPersona(true)}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#1f7a4d] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#17663f] shadow-sm">
+                  + Agregar Persona
+                </button>
+              )}
+              {tab === 'centros' && (
+                <button onClick={() => setShowAddCentro(true)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#1f7a4d] px-4 py-2.5 text-sm font-semibold text-[#1f7a4d] hover:bg-[#eef6f1]">
+                  + Agregar Centro
+                </button>
+              )}
+              {tab === 'voluntarios' && (
+                <button onClick={() => setShowAddVoluntario(true)}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#1f7a4d] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#17663f] shadow-sm">
+                  🙋 Ser voluntario
+                </button>
+              )}
+              {tab === 'denuncias' && (
+                <button onClick={() => setShowAddDenuncia(true)}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 shadow-sm">
+                  🚨 Hacer denuncia anónima
+                </button>
+              )}
+              {tab === 'rescate' && (
+                <button onClick={() => setShowAddRescate(true)}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-red-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-800 shadow-sm">
+                  🆘 Pedir rescate
+                </button>
+              )}
+              {tab === 'danos' && (
+                <button onClick={() => setShowAddDano(true)}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-700 shadow-sm">
+                  🏚️ Reportar daño
+                </button>
+              )}
+              {tab === 'peritos' && (
+                <button onClick={() => setShowAddPerito(true)}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 shadow-sm">
+                  👷 Ofrecer peritaje
+                </button>
+              )}
+              {tab === 'donaciones' && (
+                <button onClick={() => setShowAddDonacion(true)}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#1f7a4d] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#17663f] shadow-sm">
+                  💰 Registrar donación
+                </button>
+              )}
+              {tab === 'organizaciones' && (
+                <button onClick={() => setShowAddOrganizacion(true)}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#1f7a4d] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#17663f] shadow-sm">
+                  🏛️ Registrar organización
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Filtro por estado */}
+          {tab !== 'denuncias' && (
+            <div className="mb-5 flex flex-wrap items-center gap-3">
+              <label className="shrink-0 text-sm font-medium text-gray-600">Filtrar por estado:</label>
+              <select value={estado} onChange={e => setEstado(e.target.value)}
+                className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 focus:border-[#1f7a4d] focus:outline-none shadow-sm">
+                <option value="">Todos los estados</option>
+                {ESTADOS_VENEZUELA.map(e => <option key={e} value={e}>{e}</option>)}
+              </select>
+              {estado && (
+                <button onClick={() => setEstado('')} className="text-xs text-gray-400 hover:text-gray-700">
+                  ✕ Limpiar
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Avisos contextuales */}
+          {tab === 'denuncias' && (
+            <div className="mb-5 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+              <span className="shrink-0 text-xl text-red-500">🔒</span>
+              <div>
+                <p className="text-sm font-semibold text-red-800">Denuncias completamente anónimas</p>
+                <p className="mt-0.5 text-xs text-red-600">No almacenamos ningún dato personal. Reporta robos, extorsiones o abusos con total privacidad.</p>
+              </div>
+            </div>
+          )}
+          {tab === 'voluntarios' && (
+            <div className="mb-5 flex items-start gap-3 rounded-xl border border-[#1f7a4d]/20 bg-[#eef6f1] px-4 py-3">
+              <span className="shrink-0 text-2xl">🙋</span>
+              <div>
+                <p className="text-sm font-semibold text-[#17221c]">¿Puedes ayudar?</p>
+                <p className="mt-0.5 text-xs text-[#526058]">Regístrate como voluntario para conectarte con centros y familias que necesitan apoyo.</p>
+              </div>
+            </div>
+          )}
+          {tab === 'rescate' && (
+            <div className="mb-5 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+              <span className="shrink-0 text-2xl">🆘</span>
+              <div>
+                <p className="text-sm font-semibold text-red-800">Solicitudes de rescate activas</p>
+                <p className="mt-0.5 text-xs text-red-600">Para emergencias con riesgo de vida también llama al <strong>911</strong>.</p>
+              </div>
+            </div>
+          )}
+          {tab === 'danos' && (
+            <div className="mb-5 flex items-start gap-3 rounded-xl border border-orange-200 bg-orange-50 px-4 py-3">
+              <span className="shrink-0 text-2xl">🏚️</span>
+              <div>
+                <p className="text-sm font-semibold text-orange-800">Reportes de daños estructurales</p>
+                <p className="mt-0.5 text-xs text-orange-700">Peritos e ingenieros voluntarios pueden ver estos reportes y contactar a los afectados.</p>
+              </div>
+            </div>
+          )}
+          {tab === 'peritos' && (
+            <div className="mb-5 flex items-start gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
+              <span className="shrink-0 text-2xl">👷</span>
+              <div>
+                <p className="text-sm font-semibold text-blue-800">Peritos e ingenieros voluntarios</p>
+                <p className="mt-0.5 text-xs text-blue-700">¿Eres ingeniero o arquitecto? ¡Regístrate y ofrece peritaje gratuito!</p>
+              </div>
+            </div>
+          )}
+          {tab === 'donaciones' && (
+            <div className="mb-5 flex items-start gap-3 rounded-xl border border-[#1f7a4d]/20 bg-[#eef6f1] px-4 py-3">
+              <span className="shrink-0 text-2xl">💰</span>
+              <div>
+                <p className="text-sm font-semibold text-[#17221c]">Donaciones documentadas públicamente</p>
+                <p className="mt-0.5 text-xs text-[#526058]">Cada registro incluye propósito y datos del responsable para garantizar transparencia total.</p>
+              </div>
+            </div>
+          )}
+          {tab === 'organizaciones' && (
+            <div className="mb-5 flex items-start gap-3 rounded-xl border border-[#1f7a4d]/20 bg-[#eef6f1] px-4 py-3">
+              <span className="shrink-0 text-2xl">🏛️</span>
+              <div>
+                <p className="text-sm font-semibold text-[#17221c]">Organizaciones receptoras de donaciones</p>
+                <p className="mt-0.5 text-xs text-[#526058]">ONGs, fundaciones y grupos verificados ✅ que reciben y distribuyen ayuda responsablemente.</p>
+              </div>
+            </div>
+          )}
+
+          {/* Resultados */}
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-24 text-gray-400">
+              <div className="mb-3 h-8 w-8 animate-spin rounded-full border-2 border-[#1f7a4d] border-t-transparent" />
+              <p className="text-sm">Buscando...</p>
+            </div>
+          ) : results.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+              <p className="mb-4 text-5xl">{TABS.find(t => t.value === tab)?.icon}</p>
+              <p className="text-base font-medium text-gray-600">
+                {query || estado
+                  ? `No se encontraron resultados${estado ? ` en ${estado}` : ''}${query ? ` para "${query}"` : ''}`
+                  : EMPTY_LABELS[tab]}
+              </p>
+              <p className="mt-2 text-sm text-gray-400">
+                {tab === 'denuncias'     ? 'Usa el botón para registrar una denuncia anónima' :
+                 tab === 'voluntarios'   ? 'Usa el botón para registrarte como voluntario' :
+                 tab === 'rescate'       ? 'Usa el botón para enviar una solicitud de rescate' :
+                 tab === 'danos'         ? 'Usa el botón para reportar un daño estructural' :
+                 tab === 'peritos'       ? 'Usa el botón para registrarte como perito voluntario' :
+                 'Usa los botones de arriba para agregar el primero'}
+              </p>
+            </div>
+          ) : (
+            <>
+              <p className="mb-4 text-sm text-gray-500">
+                {pagination.total > 0 ? pagination.total : results.length} resultado{(pagination.total || results.length) !== 1 ? 's' : ''}{estado ? ` en ${estado}` : ''}
+                {pagination.pages > 1 ? ` — página ${pagination.page} de ${pagination.pages}` : ''}
+              </p>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {tab === 'personas'       && (results as any[]).map(p => <PersonaCard key={p.id} persona={p} />)}       {/* eslint-disable-line @typescript-eslint/no-explicit-any */}
+                {tab === 'centros'        && (results as any[]).map(c => <CentroCard key={c.id} centro={c} />)}         {/* eslint-disable-line @typescript-eslint/no-explicit-any */}
+                {tab === 'denuncias'      && (results as any[]).map(d => <DenunciaCard key={d.id} denuncia={d} />)}     {/* eslint-disable-line @typescript-eslint/no-explicit-any */}
+                {tab === 'voluntarios'    && (results as any[]).map(v => <VoluntarioCard key={v.id} voluntario={v} />)} {/* eslint-disable-line @typescript-eslint/no-explicit-any */}
+                {tab === 'rescate'        && (results as any[]).map(r => <RescateCard key={r.id} rescate={r} />)}       {/* eslint-disable-line @typescript-eslint/no-explicit-any */}
+                {tab === 'danos'          && (results as any[]).map(d => <DanoCard key={d.id} dano={d} />)}             {/* eslint-disable-line @typescript-eslint/no-explicit-any */}
+                {tab === 'peritos'        && (results as any[]).map(p => <PeritoCard key={p.id} perito={p} />)}         {/* eslint-disable-line @typescript-eslint/no-explicit-any */}
+                {tab === 'donaciones'     && (results as any[]).map(d => <DonacionCard key={d.id} donacion={d} />)}     {/* eslint-disable-line @typescript-eslint/no-explicit-any */}
+                {tab === 'organizaciones' && (results as any[]).map(o => <OrganizacionCard key={o.id} org={o} />)}      {/* eslint-disable-line @typescript-eslint/no-explicit-any */}
+              </div>
+              <Pagination page={pagination.page} pages={pagination.pages} total={pagination.total} onPage={handlePage} />
+            </>
+          )}
+        </div>
       </div>
 
       {showAddPersona && <AgregarPersonaModal open={showAddPersona} onClose={() => setShowAddPersona(false)} onSuccess={() => fetchResults(query, tab, estado)} />}
